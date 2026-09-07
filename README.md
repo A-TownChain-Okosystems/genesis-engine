@@ -1,10 +1,13 @@
-# genesis-engine — REBUILD
+# genesis-engine [L6]
 
-Genesis Engine — Neuaufbau auf Basis des Wiki-Vaults.
+Genesis Engine — Game-Engine (ECS, Creatures, World).
 
-**Gesamtinhalt vor dem Abbau** (byte-identisch verifiziert am 06.09.2026):
-im Wiki-Vault unter
-[a-townchain-os-docs/docs/archive/monorepo-full/](https://github.com/A-TownChain-Okosystems/a-townchain-os-docs/tree/main/docs/archive/monorepo-full)
+**Vault-Restauration (07.09.2026, AD-020/026/027):** Inhalt aus dem Wiki-Vault
+(docs/archive/monorepo-full/) restauriert — vor der Repo-Leerung byte-identisch gesichert. Keine — Vault-Stand konsistent.
 
-Die Git-Historie dieses Repos enthält jede Datei weiterhin (Reversibilität).
-Rebuild-Stand: atclang abgeschlossen (AD-019, Phase 1). Siehe DECISIONS_REGISTER AD-018/AD-020.
+**Module:** atc-genesis-engine, atc-genesis-ecs, atc-genesis-creatures, atc-genesis-world
+
+**Meile (AD-027):** M7 — Spiel laeuft: Engine-Loop/ECS stabil
+
+**Hinweis:** Basis fuer den Rebuild; Gate-Kriterien laut LAUFFAEHIGKEITS_ROADMAP
+(a-townchain-os-docs/docs/roadmap/).
