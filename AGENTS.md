@@ -1,3 +1,5 @@
+# AI Agent Instructions — genesis-engine
+
 ## Org-Regeln (vererbt — Pflicht für jeden Agenten in diesem Repo)
 
 Dieses Repository unterliegt dem **ATC Org-weiten Agent-Governance-System** (SCR-0057):
@@ -18,8 +20,6 @@ status: active
 standard: ATC-STD-MD-001
 date: 2026-09-07
 ---
-
-# AI Agent Instructions — genesis-engine
 
 > **Anweisungen für KI-Agenten und automatisierte Systeme**
 
