@@ -19,6 +19,8 @@ governance:
 
 # ATC Genesis Engine
 
+[![ATC-COMPLIANCE](https://img.shields.io/badge/ATC-COMPLIANCE-v1.0-green)](./AGENTS.md)
+
 > Modulare KI-native Game-Engine (ECS, Creatures, World) des A-TownChain-Ökosystems (Layer L6).
 
 **Project:** genesis-engine
