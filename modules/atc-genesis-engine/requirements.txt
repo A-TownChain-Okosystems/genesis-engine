@@ -3,4 +3,4 @@
 # Copyright (c) Michael Wroblewski. All Rights Reserved.
 
 # Markdown processing (optional, for doc generation)
-markdown>=3.5
+markdown>=3.10.3
