@@ -25,7 +25,7 @@ governance:
 **Organization:** A-TownChain-Okosystems
 **Status:** `development`
 **Version:** `0.1.0`
-**License:** `Proprietary — A-TownChain-Okosystems`
+**License:** `Apache-2.0 — A-TownChain-Okosystems`
 
 ## Overview
 
@@ -171,7 +171,7 @@ Beiträge erfolgen ausschließlich über den ATC-Governance-Prozess. Details sie
 
 ## License
 
-Proprietary — A-TownChain-Okosystems (Michael Wroblewski / ShivaCore). Details siehe `LICENSE`.
+Apache-2.0 — A-TownChain-Okosystems (Michael Wroblewski / ShivaCore). Details siehe `LICENSE`.
 
 ## Maintainers
 
