@@ -5,7 +5,7 @@ schema_version: "1.0.0"
 repository: genesis-franchise-factory
 generated: "2026-09-13"
 generated_by: "Org-Build 13.09.2026 (Superagent): kanonische Specs aus a-townchain-os-docs-Archiv uebernommen + Referenz-Implementierung gebaut"
-bound_commit: pending
+bound_commit: 0f2b7c841b1cab1dfcf5d61aee279348ceb39050
 maturity_class: C          # A=substanziell B=Rebuild/Produkt C=Plattform/Anwendung
 r_level: R1
 implementation:
