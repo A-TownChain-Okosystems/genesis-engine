@@ -14,7 +14,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: actions/checkout@v4
-        repository: A-TownChain-Okosystems/atc-standards
-        path: atc-standards
+        with:
+          repository: A-TownChain-Okosystems/atc-standards
+          path: atc-standards
       - name: Repository-Audit (R-Level aus .atc/repository.yaml)
         run: python3 atc-standards/tools/atc-repo-audit/atc_repo_audit.py . --registry atc-standards/registry/repositories.yaml
