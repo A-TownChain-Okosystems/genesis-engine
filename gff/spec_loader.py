@@ -3,6 +3,7 @@
 Dies ist ein Deskriptor-Parser (Metadaten-Extraktion), KEIN ATCLang-Compiler:
 Der vollstaendige ATCLang-Compiler/Interpreter lebt eigenstaendig im atclang-Repo (L0).
 """
+
 from __future__ import annotations
 
 import re
@@ -48,7 +49,9 @@ def load_spec(path: Path) -> FactorySpec:
     if not COPYRIGHT_RE.search(raw):
         raise SpecValidationError(f"{path.name}: Copyright-Header fehlt")
     if FORBIDDEN_RE.search(raw):
-        raise SpecValidationError(f"{path.name}: verbotene Abhaengigkeit 'chronicles' (Plattform-Trennung)")
+        raise SpecValidationError(
+            f"{path.name}: verbotene Abhaengigkeit 'chronicles' (Plattform-Trennung)"
+        )
     ad_in_name = re.search(r"_ad(\d+)\.atc$", path.name)
     if ad_in_name and int(ad_in_name.group(1)) != ad_id:
         raise SpecValidationError(
@@ -71,6 +74,8 @@ def load_specs(spec_dir: Path) -> dict[int, FactorySpec]:
     for p in sorted(spec_dir.glob("*_ad*.atc")):
         s = load_spec(p)
         if s.ad_id in specs:
-            raise SpecValidationError(f"AD-{s.ad_id:02d} doppelt: {specs[s.ad_id].file} vs {s.file}")
+            raise SpecValidationError(
+                f"AD-{s.ad_id:02d} doppelt: {specs[s.ad_id].file} vs {s.file}"
+            )
         specs[s.ad_id] = s
     return specs

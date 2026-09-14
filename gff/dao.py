@@ -4,6 +4,7 @@ Dezentrale Franchise-DAOs: jede Franchise ist eine Mini-DAO mit Token,
 Governance, Vault und Royalty-Tiers (ATC-9900).
 Quelle: docs/archive/monorepo-full/src/modules/atc-franchise (Org-Adoption 13.09.2026).
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -45,7 +46,13 @@ class FranchiseVault:
         self.balance += amount
         self.total_in += amount
         self.transactions.append(
-            {"type": "deposit", "amount": amount, "from": from_addr, "note": note, "ts": time.time()}
+            {
+                "type": "deposit",
+                "amount": amount,
+                "from": from_addr,
+                "note": note,
+                "ts": time.time(),
+            }
         )
 
     def withdraw(self, amount: float, to_addr: str, note: str = "") -> bool:
@@ -143,7 +150,9 @@ class FranchiseFactory:
         return list(self._franchises.values())
 
     def by_owner(self, owner: str) -> list[Franchise]:
-        return [self._franchises[i] for i in self._owner_index.get(owner, []) if i in self._franchises]
+        return [
+            self._franchises[i] for i in self._owner_index.get(owner, []) if i in self._franchises
+        ]
 
     def join(self, fid: str, member: str, stake: float) -> bool:
         f = self.get(fid)
@@ -163,6 +172,8 @@ class FranchiseFactory:
     def stats(self) -> dict:
         return {
             "total": len(self._franchises),
-            "active": sum(1 for f in self._franchises.values() if f.status == FranchiseStatus.ACTIVE),
+            "active": sum(
+                1 for f in self._franchises.values() if f.status == FranchiseStatus.ACTIVE
+            ),
             "total_vault": sum(f.vault.balance for f in self._franchises.values()),
         }

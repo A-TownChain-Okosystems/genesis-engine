@@ -26,6 +26,7 @@ def test_vault_negative_deposit_rejected():
 
 def test_create_franchise_dao():
     from gff.dao import FranchiseFactory
+
     ff = FranchiseFactory()
     f = ff.create("My IP", "owner1", "Test", "MIP", 1_000_000, RoyaltyTier.GOLD)
     assert f.status == FranchiseStatus.ACTIVE
@@ -37,6 +38,7 @@ def test_create_franchise_dao():
 
 def test_join_and_voting_power():
     from gff.dao import FranchiseFactory
+
     ff = FranchiseFactory()
     f = ff.create("IP2", "owner", "d", "IP2")
     assert ff.join(f.id, "member1", 100.0) is True
@@ -46,6 +48,7 @@ def test_join_and_voting_power():
 
 def test_suspend_blocks_join():
     from gff.dao import FranchiseFactory
+
     ff = FranchiseFactory()
     f = ff.create("IP3", "owner", "d", "IP3")
     ff.suspend(f.id)
@@ -55,6 +58,7 @@ def test_suspend_blocks_join():
 
 def test_distribute_revenue_royalty():
     from gff.dao import FranchiseFactory
+
     ff = FranchiseFactory()
     f = ff.create("IP4", "owner", "d", "IP4", royalty_tier=RoyaltyTier.SILVER)
     ff.join(f.id, "m1", 100.0)
@@ -67,6 +71,7 @@ def test_distribute_revenue_royalty():
 
 def test_stats():
     from gff.dao import FranchiseFactory
+
     ff = FranchiseFactory()
     ff.create("A", "o", "d", "A")
     ff.create("B", "o", "d", "B")
