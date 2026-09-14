@@ -4,6 +4,7 @@ Portiert lifecycle_manager_ad43.atc: 12-Phasen-Statemachine (Idea -> Archived).
 Hinweis (ehrlich): Das GFF-v2-Wiki nennt '11 Phasen'; die kanonische Spec
 lifecycle_manager_ad43.atc deklariert 12 Enum-Eintraege — die Spec gewinnt.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -133,7 +134,13 @@ class LifecycleManager:
             name=name,
             phase=LPhase.IDEA,
             history=[
-                {"phase": LPhase.IDEA, "entered": ts, "exited": 0.0, "notes": "Created", "success": False}
+                {
+                    "phase": LPhase.IDEA,
+                    "entered": ts,
+                    "exited": 0.0,
+                    "notes": "Created",
+                    "success": False,
+                }
             ],
             start=ts,
             target=target,
@@ -177,7 +184,9 @@ class LifecycleManager:
         )
         return True
 
-    def add_milestone(self, fid: str, name: str, phase: LPhase, target: int, criteria: list[str]) -> str:
+    def add_milestone(
+        self, fid: str, name: str, phase: LPhase, target: int, criteria: list[str]
+    ) -> str:
         fr = self.franchises.get(fid)
         if fr is None:
             raise KeyError(f"Franchise {fid} nicht gefunden")

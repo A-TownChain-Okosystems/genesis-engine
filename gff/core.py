@@ -4,6 +4,7 @@ Portiert gff_core_ad20.atc: Franchise-Registry, 10-stufige Default-Pipeline,
 Events. Der Executor ist injizierbar (Production-Integration spaeter via GCL/ATC-VM);
 ohne Executor laeuft die Pipeline im ehrlichen DRY-RUN (kein Fake-Output).
 """
+
 from __future__ import annotations
 
 import hashlib

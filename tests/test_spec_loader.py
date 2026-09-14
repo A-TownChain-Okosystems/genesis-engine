@@ -28,8 +28,20 @@ def test_lifecycle_spec_twelve_phases():
     lc = load_spec(SPEC_DIR / "lifecycle_manager_ad43.atc")
     assert lc.ad_id == 43
     raw = lc.raw
-    for phase in ["Idea", "Concept", "Prototype", "PreProd", "Production", "Alpha",
-                  "Beta", "Release", "LiveOps", "Expansion", "Successor", "Archived"]:
+    for phase in [
+        "Idea",
+        "Concept",
+        "Prototype",
+        "PreProd",
+        "Production",
+        "Alpha",
+        "Beta",
+        "Release",
+        "LiveOps",
+        "Expansion",
+        "Successor",
+        "Archived",
+    ]:
         assert f"LPhase::{phase}" in raw or phase in raw
 
 
@@ -37,7 +49,7 @@ def test_chronicles_dependency_rejected(tmp_path):
     bad = tmp_path / "bad_ad99.atc"
     bad.write_text(
         "// Copyright (c) 2026 Test\n// AD-99 — Bad\nstruct X {}\npub fn f() {}\n"
-        "import \"genesis-chronicles/game.atc\"\n",
+        'import "genesis-chronicles/game.atc"\n',
         encoding="utf-8",
     )
     with pytest.raises(SpecValidationError, match="chronicles"):

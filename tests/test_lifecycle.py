@@ -15,9 +15,19 @@ def test_register_starts_in_idea():
 def test_full_chain_to_archive():
     lm = LifecycleManager()
     fid = lm.register("Chain", now=1.0)
-    chain = [LPhase.CONCEPT, LPhase.PROTOTYPE, LPhase.PRE_PROD, LPhase.PRODUCTION,
-             LPhase.ALPHA, LPhase.BETA, LPhase.RELEASE, LPhase.LIVE_OPS,
-             LPhase.EXPANSION, LPhase.SUCCESSOR, LPhase.ARCHIVED]
+    chain = [
+        LPhase.CONCEPT,
+        LPhase.PROTOTYPE,
+        LPhase.PRE_PROD,
+        LPhase.PRODUCTION,
+        LPhase.ALPHA,
+        LPhase.BETA,
+        LPhase.RELEASE,
+        LPhase.LIVE_OPS,
+        LPhase.EXPANSION,
+        LPhase.SUCCESSOR,
+        LPhase.ARCHIVED,
+    ]
     for p in chain:
         assert lm.transition(fid, p, by="owner") is True
     assert lm.franchises[fid].phase == LPhase.ARCHIVED

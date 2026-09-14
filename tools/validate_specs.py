@@ -3,6 +3,7 @@
 
 Exit 1 bei jedem Versto (Evidence-First: dieses Gate ist CI-verbindlich).
 """
+
 from __future__ import annotations
 
 import sys
@@ -63,9 +64,11 @@ def main() -> int:
             errors.append(f"{p.name}: Copyright-Header fehlt")
         # DAO-Kern/Contracts: bewusst KEIN AD-Header erzwungen (keine AD-Factory-Specs)
 
-    print(f"Spec-Gate: {len(specs)} AD-Specs geprueft "
-          f"({len(found_factories)} Factories AD-21..43, Core AD-20 "
-          f"+ DAO-Kern {len(DAO_CORE_FILES)} + Contracts {len(CONTRACT_FILES)})")
+    print(
+        f"Spec-Gate: {len(specs)} AD-Specs geprueft "
+        f"({len(found_factories)} Factories AD-21..43, Core AD-20 "
+        f"+ DAO-Kern {len(DAO_CORE_FILES)} + Contracts {len(CONTRACT_FILES)})"
+    )
     if errors:
         for e in errors:
             print(f"  FAIL: {e}")
