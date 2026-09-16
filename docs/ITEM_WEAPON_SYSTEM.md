@@ -1,56 +1,41 @@
 # Item & Weapon System
 
-## Ziel
+## Status
 
-Genesis Engine provides deterministic, reusable item and weapon primitives that can support RPG, FPS, TPS, survival, tactical, racing, simulation and hybrid games without coupling gameplay to rendering or blockchain state.
+`FOUNDATION_IMPLEMENTED / PRODUCTION_NOT_ESTABLISHED`
 
-## Item model
+## Item layer
 
-`ItemDefinition` describes static item data:
+`ItemDefinition` defines stable item identity, category, stack limit and weight. `ItemStack` and `Inventory` provide deterministic quantity management. Failed removals do not mutate the inventory.
 
-- stable ID
-- item kind
-- stack limit
-- weight
+## Weapon layer
 
-`ItemStack` represents runtime quantity. `Inventory` provides deterministic stacking, counting and atomic-enough removal semantics: failed removal does not mutate the inventory.
+`WeaponDefinition` describes weapon kind, damage, damage type, range, magazine size, ammunition type and durability. `WeaponInstance` stores runtime ammunition/durability and `WeaponLoadout` manages bounded slots.
 
-## Weapon model
+## Extended systems
 
-`WeaponDefinition` describes static weapon data:
+### Armor
+`ArmorStats` supports physical, fire, cold, electric and poison mitigation with resistance clamped to 0..100%.
 
-- weapon kind
-- damage type
-- base damage
-- range
-- magazine size
-- ammunition type
-- durability
+### Ammunition
+`Ammunition` carries damage-type and percentage modifier metadata. Ammunition remains data-driven and can later be bound to weapon compatibility rules.
 
-`WeaponInstance` contains runtime ammunition and durability. `WeaponLoadout` provides bounded equipment slots.
+### Attachments
+`WeaponAttachment` provides deterministic additive modifiers for damage, range and magazine capacity. `WeaponAttachmentState` aggregates installed modifiers.
 
-`WeaponInstance::fire()` consumes exactly one ammunition unit and one durability unit when both are available.
+### Rarity
+`Rarity` provides the common/uncommon/rare/epic/legendary classification primitive. It is metadata, not a hidden stat multiplier.
 
-## Preset integration
+### Loot
+`LootTable` uses weighted deterministic selection from an explicit seed. It does not use wall-clock randomness.
 
-The item/weapon primitives complement the existing gameplay presets:
+### Crafting
+`Recipe` and `RecipeIngredient` provide deterministic ingredient validation and output creation. Missing ingredients leave inventory unchanged.
 
-- inventory presets define container capacity/layout policy
-- equipment presets define slot policy
-- loadout presets define starting configuration
-- weapon definitions remain data-driven and are not hard-coded to a genre
+## Architectural boundaries
 
-## Safety and determinism
+The system is independent of rendering, physics backends, UI and A-TownChain consensus. Network authority, persistence and anti-cheat validation must be implemented at the appropriate higher layers.
 
-- empty IDs are rejected by inventory insertion
-- zero stack limits are rejected
-- inventory removal checks total availability before mutation
-- weapon firing cannot consume ammunition or durability below zero
-- loadout indices are bounds checked
-- runtime state contains no renderer or blockchain dependency
+## Remaining production layers
 
-## Not production-complete
-
-The foundation does not yet implement projectile simulation, recoil, spread, hit validation, armor penetration, attachment systems, durability repair, crafting, loot tables, serialization compatibility, networking authority, or anti-cheat validation. Those belong to later specialized systems.
-
-**Status: FOUNDATION_IMPLEMENTED / PRODUCTION_NOT_ESTABLISHED**
+Projectile/hit simulation, hitboxes, armor penetration, attachment compatibility, ammunition consumption rules, loot generation policies, affixes, crafting stations, serialization/versioning, authoritative multiplayer validation, replication and editor tooling remain separate work items.
