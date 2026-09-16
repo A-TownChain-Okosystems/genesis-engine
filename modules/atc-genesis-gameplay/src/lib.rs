@@ -17,7 +17,7 @@ pub use crafting::{CraftFailure, CraftingIngredient, CraftingRecipe, BASIC_TOOLS
 pub use economy::{Market, TradeOffer, Wallet};
 pub use crafting_jobs::{CraftingJob, CraftingQueue};
 pub use production::{ProductionStation, ProductionStationKind, ToolState, FORGE, KITCHEN, WORKBENCH};
-pub use production_execution::{finish_production, start_production, ProductionFailure, ProductionJob};
+pub use production_execution::{finish_production, start_production, ProductionFailure, ProductionJob, ProductionToolRequirement};
 pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, ReplicatedTransform, ReplicationBuffer, SpaceState, StrategyOrder, StrategyQueue};
 
 #[derive(Clone, Copy, Debug, PartialEq)] pub struct MovementConfig { pub speed:f32,pub axis_x:Option<u8>,pub axis_z:Option<u8> }
