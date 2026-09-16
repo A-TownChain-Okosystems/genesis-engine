@@ -12,7 +12,7 @@ Unterstützte Lichttypen:
 - Point Light
 - Spot Light
 
-Die Lichtregistrierung validiert IDs, Richtungen, Intensität, Reichweite, Finite-Werte und Spot-Winkel. fileciteturn254file0
+Die Lichtregistrierung validiert IDs, Richtungen, Intensität, Reichweite, Finite-Werte und Spot-Winkel.
 
 ## Schattenkonfiguration
 
@@ -41,17 +41,41 @@ Die Lichtregistrierung validiert IDs, Richtungen, Intensität, Reichweite, Finit
 
 Jeder Pass besitzt eine stabile `ShadowPassId` aus Licht-ID und Slice. Die Planungsreihenfolge ist deterministisch.
 
-Diese Ebene erzeugt **keine** Vulkan-, D3D12-, Metal- oder OpenGL-Kommandos und reserviert keine GPU-Ressourcen. Sie definiert ausschließlich die Render-Graph-nahe Ausführungsplanung. Die bestehende Backend-Abstraktion bleibt für API-spezifische Ausführung zuständig. fileciteturn257file0
+## Render-Graph-Integration
+
+`ShadowFramePlan::populate_render_graph()` verbindet die Shadow-Pässe mit dem bestehenden `RenderPassGraph`:
+
+1. Jeder Shadow-Pass schreibt eine eigene Shadow-Resource.
+2. Der Lighting-Pass liest alle erzeugten Shadow-Resources.
+3. Der Lighting-Pass erhält explizite Abhängigkeiten auf alle Shadow-Pässe.
+4. `RenderPassGraph::ordered_passes()` erzwingt dadurch `Shadow → Lighting`.
+5. Shadow-Pass- und Resource-IDs werden deterministisch aus `LightId` und Slice abgeleitet.
+6. Nicht darstellbare `LightId`-Werte werden fail-closed mit `LightIdTooLarge` abgewiesen.
+
+Damit ist die Render-Graph-Abhängigkeit implementiert, ohne bereits eine konkrete GPU-API vorzutäuschen.
+
+## Architekturgrenze
+
+Die Shadow-Schicht erzeugt keine Vulkan-, D3D12-, Metal- oder OpenGL-Kommandos und reserviert keine GPU-Ressourcen. Die vorhandene Backend-Abstraktion bleibt für API-spezifische Ausführung zuständig.
 
 ## Datenfluss
 
-`LightRegistry → ShadowConfig → Cascade/Projection Selection → ShadowFramePlan → Backend Shadow Resources → Shadow Depth Pass → Lighting Pass`
+`LightRegistry → ShadowConfig → Cascade/Projection Selection → ShadowFramePlan → RenderPassGraph (Shadow → Lighting) → Backend Shadow Resources → Shadow Depth Pass → Lighting Shader`
 
-Die ersten vier Stufen sind implementiert. Die letzten drei benötigen backend-spezifische GPU-Implementierung.
+Die Render-Graph-Planung ist implementiert. Die tatsächliche GPU-Ausführung bleibt offen.
+
+## Fehlerklassen
+
+- `InvalidBias`
+- `InvalidDistance`
+- `InvalidCascadeCount`
+- `UnsupportedLight`
+- `LightIdTooLarge`
+- `ShadowGraphError::Graph(...)`
 
 ## Tests
 
-Implementiert:
+Implementiert sind Tests für:
 
 - Lichtvalidierung
 - deterministische Lichtsortierung
@@ -61,6 +85,8 @@ Implementiert:
 - deterministische Shadow-Light-Auswahl
 - Directional-Light-Cascade-Passplanung
 - stabile Pass-Reihenfolge
+- `Shadow → Lighting` Render-Graph-Abhängigkeit
+- fail-closed Behandlung nicht darstellbarer Licht-IDs
 
 ## Noch offene GPU-Stufen
 
@@ -74,16 +100,17 @@ Implementiert:
 8. PCF/PCSS-Filterung in den Lighting-Shadern
 9. Kontakt-/Self-Shadowing
 10. Shadow-Caching und Update-Frequenz
-11. Render-Graph-Abhängigkeit `Shadow → Lighting`
-12. Vulkan-Ausführung
-13. Direct3D 12-Ausführung
-14. Metal-Ausführung
-15. GPU-Profiling und Speicherbudgetierung
+11. Vulkan-Ausführung
+12. Direct3D 12-Ausführung
+13. Metal-Ausführung
+14. GPU-Profiling und Speicherbudgetierung
 
 ## Status
 
 `LIGHTING_FOUNDATION_IMPLEMENTED`
 
 `SHADOW_PASS_PLANNING_IMPLEMENTED`
+
+`RENDER_GRAPH_SHADOW_TO_LIGHTING_IMPLEMENTED`
 
 `GPU_SHADOW_RENDERING_NOT_ESTABLISHED`
