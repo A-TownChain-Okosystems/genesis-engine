@@ -15,6 +15,7 @@ pub mod pipeline;
 pub mod render_graph;
 pub mod render_item;
 pub mod resources;
+pub mod shadows;
 pub mod weather;
 pub use animation::SkinnedPose;
 pub use backend::{BackendRenderer, CommandBufferBackend, GraphicsBackend, NullBackend, RenderBackend, RenderCapabilities};
@@ -31,6 +32,7 @@ pub use pipeline::{command_error_is_recoverable, command_kind, DrawPacket, Graph
 pub use render_graph::{RenderGraphError, RenderPassDesc, RenderPassGraph, RenderPassId, RenderResourceId, ResourceAccess, ResourceUse};
 pub use render_item::{collect_entity, collect_render_items};
 pub use resources::{MaterialHandle, MeshHandle, MeshMaterialBinding, RenderResourceBindings, TextureHandle};
+pub use shadows::{directional_cascades, light_supports_shadows, shadow_lights, ShadowCascade, ShadowCaster, ShadowConfig, ShadowError, ShadowMapResolution, ShadowMode};
 pub use weather::{WeatherCell, WeatherClass, WeatherConfig, WeatherError, WeatherField};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
