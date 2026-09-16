@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+  "modules/atc-genesis-core",
   "modules/atc-genesis-animation",
   "modules/atc-genesis-assets",
   "modules/atc-genesis-audio",
