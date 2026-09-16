@@ -21,7 +21,7 @@ pub fn start_production(
     mut tool: Option<&mut ToolState>,
 ) -> Result<ProductionJob, ProductionFailure> {
     if recipe.id.is_empty() || recipe.output_item_id.is_empty() || recipe.output_quantity == 0 || recipe.duration_ticks == 0 || recipe.ingredients.iter().any(|i| i.item_id.is_empty() || i.quantity == 0) { return Err(ProductionFailure::InvalidRecipe); }
-    if !station.accepts() || recipe.station.map(|id| id != station.id).unwrap_or(false) { return Err(ProductionFailure::WrongStation); }
+    if !station.accepts(station.id) || recipe.station.map(|id| id != station.id).unwrap_or(false) { return Err(ProductionFailure::WrongStation); }
     if let Some(tech) = recipe.required_technology { if !researched.contains(&tech) { return Err(ProductionFailure::MissingTechnology); } }
     if recipe.ingredients.iter().any(|i| inventory.count(i.item_id) < i.quantity) { return Err(ProductionFailure::MissingIngredient); }
     if let Some(ref mut t) = tool { if t.broken() { return Err(ProductionFailure::ToolBroken); } }
@@ -33,7 +33,7 @@ pub fn start_production(
 }
 
 pub fn finish_production(job: &ProductionJob, station: &mut ProductionStation) -> Result<(), ProductionFailure> {
-    if !job.job.complete() || !station.accepts() { return Err(ProductionFailure::OutputBlocked); }
+    if !job.job.complete() || !station.accepts(station.id) { return Err(ProductionFailure::OutputBlocked); }
     let remaining = station.store_output(&job.output_item_id, job.output_quantity, u32::MAX);
     if remaining != 0 { return Err(ProductionFailure::OutputBlocked); }
     Ok(())
