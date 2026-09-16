@@ -2,19 +2,20 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 pub mod dynamic_bvh;
+pub mod hierarchical_bvh;
 pub mod jobs;
 pub mod memory;
 pub mod spatial;
 pub use dynamic_bvh::{DynamicBvh, DynamicBvhError, DynamicLeaf};
+pub use hierarchical_bvh::{BvhEntity, BvhError, HierarchicalBvh};
 pub use jobs::{JobError, JobId, JobQueue};
 pub use memory::{Allocation, GenerationalStorage, LinearAllocator};
 pub use spatial::{Aabb, Ray, Sphere, SpatialError, SpatialWorld};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct GenerationalId { pub index: u32, pub generation: u32 }
-impl GenerationalId { pub const INVALID: Self = Self { index: u32::MAX, generation: 0 }; pub const fn new(index:u32,generation:u32)->Self{Self{index,generation}} }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub struct TimeStep { pub frame:u64,pub delta_seconds:f32,pub elapsed_seconds:f64 }
-#[derive(Clone, Copy, Debug, PartialEq)] pub struct TimeState { frame:u64,elapsed_seconds:f64 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)] pub struct GenerationalId { pub index:u32,pub generation:u32 }
+impl GenerationalId{pub const INVALID:Self=Self{index:u32::MAX,generation:0};pub const fn new(index:u32,generation:u32)->Self{Self{index,generation}}}
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]pub struct TimeStep{pub frame:u64,pub delta_seconds:f32,pub elapsed_seconds:f64}
+#[derive(Clone,Copy,Debug,PartialEq)]pub struct TimeState{frame:u64,elapsed_seconds:f64}
 impl Default for TimeState{fn default()->Self{Self{frame:0,elapsed_seconds:0.0}}}
 impl TimeState{pub fn advance(&mut self,delta:f32)->Result<TimeStep,TimeError>{if !delta.is_finite(){return Err(TimeError::NonFiniteDelta)}if delta<0.0{return Err(TimeError::NegativeDelta)}let frame=self.frame;self.frame=self.frame.checked_add(1).ok_or(TimeError::FrameOverflow)?;self.elapsed_seconds+=delta as f64;Ok(TimeStep{frame,delta_seconds:delta,elapsed_seconds:self.elapsed_seconds})}pub const fn frame(&self)->u64{self.frame}pub const fn elapsed_seconds(&self)->f64{self.elapsed_seconds}}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum TimeError{NonFiniteDelta,NegativeDelta,FrameOverflow}
