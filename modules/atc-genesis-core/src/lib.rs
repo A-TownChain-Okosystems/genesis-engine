@@ -1,6 +1,11 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
+pub mod jobs;
+pub mod memory;
+pub use jobs::{JobError, JobId, JobQueue};
+pub use memory::{Allocation, GenerationalStorage, LinearAllocator};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct GenerationalId { pub index: u32, pub generation: u32 }
 impl GenerationalId { pub const INVALID: Self = Self { index: u32::MAX, generation: 0 }; pub const fn new(index:u32,generation:u32)->Self{Self{index,generation}} }
