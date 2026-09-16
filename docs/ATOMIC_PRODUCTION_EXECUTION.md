@@ -2,7 +2,7 @@
 
 ## Zweck
 
-Dieses Modul verbindet Rezepte, Produktionsstationen, Inventare, zeitbasierte Crafting-Jobs und Werkzeuge zu einem deterministischen Produktionsablauf.
+Dieses Modul verbindet Rezepte, Produktionsstationen, Inventare, zeitbasierte Crafting-Jobs, Werkzeuge und optionale Worker/NPC-Zuweisungen zu einem deterministischen Produktionsablauf.
 
 ## Start einer Produktion
 
@@ -38,21 +38,32 @@ Input und Output besitzen getrennte Stack-Limits:
 - `input_slots`
 - `output_slots`
 
-`input_has_storage()` und `output_has_storage()` prüfen vorhandene freie Stackplätze oder noch nicht volle bestehende Stacks. Ungültige Einlagerungen werden vor der Mutation abgewiesen.
+`input_has_storage()` und `output_has_storage()` prüfen vorhandene freie Stackplätze oder noch nicht volle bestehende Stacks.
 
-Damit sind **Job-Kapazität** und **Lagerkapazität** getrennte Ressourcen und werden nicht mehr über dasselbe Feld semantisch vermischt.
+## Worker-/NPC-Zuweisung
+
+`ProductionWorker` modelliert eine optionale Produktionsarbeitskraft:
+
+- stabile Worker-ID
+- `skill_permille` im Bereich `0..=1000`
+- exklusive Belegung über `available`
+- Zuordnung zur Stations-ID
+- deterministisches Freigeben
+- deterministische Dauerberechnung über `effective_duration()`
+
+`ProductionJob::worker_id` bleibt optional, sodass Jobs weiterhin ohne Worker gestartet werden können. `assign_worker()` verhindert Doppelzuweisung; `release_worker()` löst die Zuordnung wieder.
+
+Die Skill-Dauer ist derzeit ein deterministischer Simulationswert und verändert nicht automatisch die bereits erzeugte `CraftingJob`-Dauer. Eine spätere Produktionsplanung kann diesen Wert vor Job-Erzeugung als autoritative Dauer verwenden.
 
 ## Abschluss
 
 `finish_production` akzeptiert nur vollständig abgearbeitete Jobs der korrekten Station. Vor der Output-Mutation wird die verfügbare Output-Lagerkapazität geprüft. Nach erfolgreicher Output-Erzeugung wird der Stationsslot freigegeben.
 
-Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCompleted`). Dadurch wird doppelte Output-Erzeugung verhindert.
-
-Wenn der Output-Speicher voll ist, bleiben Job und Stationsreservierung erhalten; der Abschluss kann nach Freigabe von Lagerplatz erneut versucht werden.
+Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCompleted`). Wenn der Output-Speicher voll ist, bleiben Job und Stationsreservierung erhalten.
 
 ## Datenfluss
 
-`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Queue/Tick → Werkzeugverschleiß → Output-Lagerprüfung → Output → Kapazitätsfreigabe`
+`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Worker-Zuweisung → Queue/Tick → Output-Lagerprüfung → Output → Kapazitätsfreigabe → Worker-Freigabe`
 
 ## Fehlerklassen
 
@@ -83,10 +94,14 @@ Die Implementierung enthält Tests für:
 - Freigabe der Stationskapazität
 - Schutz gegen doppelte Output-Erzeugung
 - blockierten Output ohne Freigabe des laufenden Jobs
+- exklusive Worker-Zuweisung
+- Worker-Freigabe
+- deterministische Skill-Dauer
+- ungültige Worker-Konfiguration
 
 ## Noch offene technische Punkte
 
-Die grundlegenden Job- und Lagergrenzen sind implementiert. Noch offen sind Worker-/NPC-Zuweisung, Persistenz/Wiederaufnahme, Multiplayer-Autorität, Qualitäts- und Skill-Systeme sowie eine vollständige Produktionsökonomie.
+Worker-/NPC-Zuweisung ist als deterministische Foundation implementiert. Noch offen sind autoritative Skill-Auswirkung auf Jobdauer, Worker-Persistenz/Wiederaufnahme, Abwesenheit/Unterbrechung, Multiplayer-Autorität, Qualitäts- und Skill-Systeme sowie eine vollständige Produktionsökonomie.
 
 ## Status
 
