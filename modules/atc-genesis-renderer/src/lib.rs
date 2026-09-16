@@ -5,6 +5,7 @@ pub mod batching;
 pub mod commands;
 pub mod ecs;
 pub mod materials;
+pub mod pipeline;
 pub mod render_item;
 pub mod resources;
 pub use animation::SkinnedPose;
@@ -12,6 +13,7 @@ pub use backend::{BackendRenderer, CommandBufferBackend, GraphicsBackend, NullBa
 pub use batching::{build_batches, RenderBatch, RenderItem};
 pub use commands::{RenderCommand, RenderCommandError, RenderCommandStream};
 pub use materials::{MaterialError, MaterialId, MaterialInstance, PbrMaterial};
+pub use pipeline::{command_error_is_recoverable, command_kind, DrawPacket, GraphicsPipelineDesc, PipelineError, PipelineId, PrimitiveTopology, RenderPipelineRegistry, ShaderId, ShaderModule, ShaderStage};
 pub use render_item::{collect_entity, collect_render_items};
 pub use resources::{MaterialHandle, MeshHandle, MeshMaterialBinding, RenderResourceBindings, TextureHandle};
 
