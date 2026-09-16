@@ -10,6 +10,7 @@ pub mod items;
 pub mod item_systems;
 pub mod plants;
 pub mod animals;
+pub mod technology;
 pub use genre::{Capability, Genre, GenreProfile, ALL_GENRES, UNIVERSAL_CAPABILITIES, profile};
 pub use combat::{Attack, CombatEvent, Combatant, Damage, DamageType, Health, TeamRelation};
 pub use interaction::{Ability, AbilityState, Interaction, InteractionKind};
@@ -18,6 +19,7 @@ pub use items::{DamageType as ItemDamageType, Inventory, ItemDefinition, ItemKin
 pub use item_systems::{Ammunition, ArmorSlot, ArmorStats, LootEntry, LootTable, Recipe, RecipeIngredient, Rarity, WeaponAttachment, WeaponAttachmentState};
 pub use plants::{PlantDefinition, PlantEnvironment, PlantInstance, PlantStage, CropPlot, WHEAT, CORN, HERB};
 pub use animals::{AnimalDefinition, AnimalEnvironment, AnimalInstance, AnimalKind, AnimalState, Herd, DEER, WOLF, COW};
+pub use technology::{TechnologyCategory, TechnologyDefinition, TechnologyTier, TechnologyTree, FurnitureDefinition, FurnitureInstance, FurnitureKind, FurnitureRoom, AGRICULTURE, CONSTRUCTION, ELECTRICITY, COMPUTING, CHAIR, TABLE, BED, CABINET};
 pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, ReplicatedTransform, ReplicationBuffer, SpaceState, StrategyOrder, StrategyQueue};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
