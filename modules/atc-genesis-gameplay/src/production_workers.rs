@@ -30,15 +30,19 @@ impl ProductionWorker {
         true
     }
 
+    /// Skill 0 keeps the base duration. Skill 1000 halves it, with a minimum of one tick.
     pub fn effective_duration(&self, base_ticks: u64) -> u64 {
         if base_ticks == 0 { return 0; }
-        let skill = self.skill_permille.max(1) as u64;
-        ((base_ticks.saturating_mul(1000) + skill - 1) / skill).max(1)
+        let factor = 1000u64.saturating_sub((self.skill_permille as u64) / 2);
+        base_ticks.saturating_mul(factor).div_ceil(1000).max(1)
     }
 }
 
 pub fn assign_worker(job: &mut ProductionJob, worker: &mut ProductionWorker) -> bool {
     if job.worker_id.is_some() || !worker.assign(job.station_id) { return false; }
+    let adjusted = worker.effective_duration(job.job.total_ticks);
+    job.job.total_ticks = adjusted;
+    job.job.remaining_ticks = adjusted;
     job.worker_id = Some(worker.id.to_string());
     true
 }
@@ -65,6 +69,8 @@ mod tests {
         let mut job = start_production(&RECIPE, &mut inventory, &mut station, &[], None, None).unwrap();
         let mut worker = ProductionWorker::new("worker-1", 1000).unwrap();
         assert!(assign_worker(&mut job, &mut worker));
+        assert_eq!(job.job.total_ticks, 5);
+        assert_eq!(job.job.remaining_ticks, 5);
         assert!(!assign_worker(&mut job, &mut worker));
         assert!(!worker.available);
         assert!(release_worker(&mut job, &mut worker));
@@ -74,9 +80,11 @@ mod tests {
 
     #[test]
     fn skill_duration_is_deterministic_and_bounded() {
-        let worker = ProductionWorker::new("worker-1", 500).unwrap();
-        assert_eq!(worker.effective_duration(10), 20);
-        assert_eq!(worker.effective_duration(0), 0);
+        let novice = ProductionWorker::new("novice", 0).unwrap();
+        let expert = ProductionWorker::new("expert", 1000).unwrap();
+        assert_eq!(novice.effective_duration(10), 10);
+        assert_eq!(expert.effective_duration(10), 5);
+        assert_eq!(expert.effective_duration(1), 1);
     }
 
     #[test]
