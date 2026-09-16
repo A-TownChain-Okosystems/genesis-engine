@@ -9,6 +9,7 @@ pub mod geometry;
 pub mod lighting;
 pub mod materials;
 pub mod pipeline;
+pub mod render_graph;
 pub mod render_item;
 pub mod resources;
 pub use animation::SkinnedPose;
@@ -20,6 +21,7 @@ pub use geometry::{Bounds, GeometryError, IndexFormat, MeshGeometry, VertexPosit
 pub use lighting::{DirectionalLight, Light, LightId, LightKind, LightRegistry, LightingError, PointLight, SpotLight};
 pub use materials::{MaterialError, MaterialId, MaterialInstance, PbrMaterial};
 pub use pipeline::{command_error_is_recoverable, command_kind, DrawPacket, GraphicsPipelineDesc, PipelineError, PipelineId, PrimitiveTopology, RenderPipelineRegistry, ShaderId, ShaderModule, ShaderStage};
+pub use render_graph::{RenderGraphError, RenderPassDesc, RenderPassGraph, RenderPassId, RenderResourceId, ResourceAccess, ResourceUse};
 pub use render_item::{collect_entity, collect_render_items};
 pub use resources::{MaterialHandle, MeshHandle, MeshMaterialBinding, RenderResourceBindings, TextureHandle};
 
