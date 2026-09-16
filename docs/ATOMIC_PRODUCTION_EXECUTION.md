@@ -74,6 +74,19 @@ Input und Output besitzen getrennte Stack-Limits:
 
 Die Wiederaufnahme rekonstruiert absichtlich keinen neuen Stationsslot und konsumiert keine Ressourcen erneut. Persistenz ist damit eine Zustandswiederherstellung eines bereits gestarteten Jobs, keine zweite Job-Erzeugung.
 
+## Versioniertes Recovery-Journal
+
+`ProductionJournal` ergänzt den Snapshot um eine deterministische Recovery-Schicht:
+
+- `PRODUCTION_STATE_VERSION` versioniert das Persistenzschema.
+- Jede Speicherung erhält eine monoton steigende Sequenznummer.
+- Ein Snapshot wird zunächst als `committed = false` angelegt.
+- Erst `commit(sequence)` macht den Datensatz wiederherstellbar.
+- `latest_committed()` ignoriert uncommittete oder unbekannte Versionen.
+- `recover()` stellt ausschließlich den letzten gültig committeten Datensatz wieder her.
+
+Damit kann ein externer persistenter Speicher ein Write-Ahead-/Commit-Muster verwenden: ein abgebrochener Schreibvorgang darf nicht als gültiger Produktionszustand interpretiert werden. Das Modul selbst bleibt bewusst storage-backend-neutral; Dateisystem-, Datenbank- oder A-TownChain-Persistenz wird nicht vorgetäuscht.
+
 ## Pause und Resume
 
 Der Pausezustand wird persistiert. Ein pausierter `CraftingJob` verarbeitet keine Ticks. Nach erfolgreicher Wiederherstellung kann der Job über die vorhandenen `resume()`-/`tick()`-Operationen fortgesetzt werden.
@@ -86,7 +99,7 @@ Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCom
 
 ## Datenfluss
 
-`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Worker-Zuweisung/Skill → Queue/Tick → Snapshot → Restore → Output-Lagerprüfung → Output → Stationsfreigabe → Worker-Freigabe`
+`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Worker-Zuweisung/Skill → Queue/Tick → Snapshot → Journal → Commit → Restore → Output-Lagerprüfung → Output → Stationsfreigabe → Worker-Freigabe`
 
 ## Fehlerklassen
 
@@ -105,6 +118,11 @@ Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCom
 - `ProductionPersistenceFailure::StationMismatch`
 - `ProductionPersistenceFailure::OutputMismatch`
 - `ProductionPersistenceFailure::AlreadyCompleted`
+- `ProductionStoreFailure::InvalidVersion`
+- `ProductionStoreFailure::InvalidState`
+- `ProductionStoreFailure::Uncommitted`
+- `ProductionStoreFailure::EmptyJournal`
+- `ProductionStoreFailure::SequenceConflict`
 
 ## Tests
 
@@ -129,10 +147,13 @@ Die Implementierung enthält Tests für:
 - Wiederaufnahme eines pausierten Jobs
 - Ablehnung inkonsistenter Persistenzdaten ohne Mutation
 - Ablehnung von Rezept-/Identitätsabweichungen
+- Ausschluss uncommitteter Recovery-Snapshots
+- deterministische Recovery eines committeten Snapshots
+- monotone Sequenznummern
 
 ## Noch offene technische Punkte
 
-Die deterministische Persistenz-/Resume-Foundation ist implementiert. Noch offen sind ein konkretes dauerhaftes Dateiformat bzw. Serializer, Crash-Atomicity des externen Speichers, Worker-Wiederzuordnung nach Prozessneustart, Abwesenheit/Unterbrechung, Multiplayer-Autorität, Qualitäts- und fortgeschrittene Skill-Systeme sowie eine vollständige Produktionsökonomie.
+Die versionierte Recovery-Journal-Foundation ist implementiert. Noch offen sind ein konkretes dauerhaftes Binär-/Dateiformat bzw. Serializer, echte Crash-Atomicity des externen Speichers, fsync-/Durability-Semantik des jeweiligen Backends, Worker-Wiederzuordnung nach Prozessneustart, Abwesenheit/Unterbrechung, Multiplayer-Autorität, Qualitäts- und fortgeschrittene Skill-Systeme sowie eine vollständige Produktionsökonomie.
 
 ## Status
 
