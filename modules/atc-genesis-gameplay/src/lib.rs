@@ -5,10 +5,14 @@ pub mod genre;
 pub mod combat;
 pub mod interaction;
 pub mod systems;
+pub mod ai;
+pub mod rpg;
 pub use genre::{Capability, Genre, GenreProfile, ALL_GENRES, UNIVERSAL_CAPABILITIES, profile};
-pub use combat::{Attack, CombatEvent, Combatant, Damage, DamageType, Health, TeamRelation};
+pub use combat::{Attack, CombatEvent, Combatant, Damage, DamageType, TeamRelation};
 pub use interaction::{Ability, AbilityState, Interaction, InteractionKind};
-pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, SpaceState, StrategyOrder, StrategyQueue};
+pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, ReplicatedTransform, ReplicationBuffer, SpaceState, StrategyOrder, StrategyQueue};
+pub use ai::{astar, choose_utility, BehaviorNode, BehaviorStatus, GridBounds, GridCost, GridNode, UtilityOption};
+pub use rpg::{DialogueChoice, DialogueGraph, DialogueNode, Equipment, EquipmentSlot, Inventory, ItemStack, Quest, QuestState, SkillTree, Stat};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MovementConfig { pub speed: f32, pub axis_x: Option<u8>, pub axis_z: Option<u8> }
