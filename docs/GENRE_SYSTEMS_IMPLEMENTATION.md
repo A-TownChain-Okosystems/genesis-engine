@@ -1,40 +1,47 @@
 # Genre Systems Implementation
 
-## Scope
-This document tracks concrete engine foundations behind the genre capability registry. The systems are reusable and deterministic; they are not claimed to be production-complete simulations.
+## Ziel
+Die Genre-Capability-Matrix wird schrittweise in wiederverwendbare, deterministische Engine-Systeme überführt. Die Systeme dürfen weder Renderer noch A-TownChain voraussetzen.
 
-## Implemented foundations
+## Aktueller Implementierungsstand
 
-| Domain | Concrete foundation |
+| Bereich | Implementiert |
 |---|---|
-| Character | grounded state, stamina, jump/land gating |
-| Combat | existing damage, health, attacks, teams |
-| AI/Strategy | deterministic priority order queue |
-| Economy | bounded deposits/withdrawals |
-| Building | deterministic occupied-cell grid |
-| Multiplayer | tick/sequence metadata and normalized input frames |
-| Racing/Sports | lap/checkpoint/progress state |
-| Flight | thrust/lift integration and attitude state |
-| Space | double-precision position/velocity integration |
-| Narrative | typed event stream and completion queries |
-| Modding | unique sorted descriptors and dependency metadata |
+| Character | Grounded-State, Jump-Gating, Stamina-Recovery |
+| Combat | Health, Damage, Attacks, Teams |
+| Strategy | deterministische Priority-Queue |
+| Economy | Overflow-/Overdraw-sichere Kontofunktionen |
+| Building | deterministisches Grid mit Placement/Removal |
+| Multiplayer | Input-Normalisierung, Tick/Sequence, deterministischer Replication-Buffer |
+| Racing/Sports | Checkpoint-/Progress-State und Lap-Fortschritt |
+| Flight | Thrust/Lift-basierte Fluggrundlage |
+| Space | Double-Precision-Position/Velocity-Integration |
+| Narrative | typisierte Events und Completion-State |
+| Modding | IDs, Versionen, Dependencies, Permissions und deterministische Registry |
 
-## Architecture rule
-Genre systems remain independent from rendering and blockchain state. A-TownChain integration is an explicit adapter boundary; gameplay simulation must remain usable without a chain connection.
+## Architekturregeln
 
-## Determinism
-Inputs are normalized, invalid negative economy operations are rejected, strategy ordering is stable, and simulation time is clamped to non-negative values. These foundations are suitable as deterministic building blocks but still require integration-level replay, rollback, networking, serialization, and performance validation.
+1. Gameplay-Simulation bleibt unabhängig von Rendering und Blockchain.
+2. Netzwerkdaten werden normalisiert und deterministisch sortiert.
+3. Mod-Abhängigkeiten müssen explizit auflösbar sein; Permissions sind Bestandteil des Manifests.
+4. A-TownChain-Integration erfolgt ausschließlich über eine explizite Adaptergrenze.
+5. Foundations sind nicht automatisch produktionsreife Subsysteme.
 
-## Next implementation layers
-1. Character locomotion/controller and ability composition.
-2. Navigation, behavior trees, utility AI, squads and factions.
-3. Inventory, equipment, crafting, quests and dialogue graphs.
-4. Economy markets, resource production, diplomacy and territory.
-5. Building constraints, destruction, farming and simulation ticks.
-6. Multiplayer authority, replication, prediction, reconciliation, matchmaking and replay.
-7. Full racing/sports rules, vehicle dynamics and event timing.
-8. 6-DOF flight, orbital mechanics and spacecraft propulsion models.
-9. Narrative graph runtime, localization hooks and cinematic sequencing.
-10. Mod sandbox, manifests, dependency resolution, permissions and API versioning.
+## Nächste Tiefenebenen
 
-Production readiness remains unestablished until these layers are implemented, tested and evidenced.
+1. Character Controller: locomotion modes, acceleration, slope handling, crouch, swim, climb, abilities.
+2. AI: navigation, navmesh, behavior trees, utility AI, perception, squads, factions.
+3. RPG: inventory, equipment, crafting, stats, skills, quests and dialogue graphs.
+4. Simulation/Economy: resources, production chains, markets, trading, diplomacy, territory.
+5. Building: structural constraints, snapping, construction phases, destruction and farming.
+6. Multiplayer: authority model, snapshots, interpolation, client prediction, reconciliation, rollback, matchmaking and replay.
+7. Racing/Sports: complete event/rule systems, timing, penalties, scoring and deterministic race progression.
+8. Flight/Space: 6-DOF attitude dynamics, aerodynamic coefficients, propulsion, orbital mechanics and staging.
+9. Narrative: graph runtime, branching state, localization, save-state integration and cinematic sequencing.
+10. Modding: manifest validation, dependency graph resolution, capability permissions, API compatibility and sandbox boundary.
+
+## Test-/Evidence-Grenze
+
+Unit tests are part of the foundations. Integration tests, replay determinism, serialization compatibility, network interoperability, performance profiling and platform-specific validation remain required before production readiness can be established.
+
+**Status: FOUNDATION_IMPLEMENTED / PRODUCTION_NOT_ESTABLISHED**
