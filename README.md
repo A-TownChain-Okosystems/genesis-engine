@@ -1,5 +1,7 @@
 # Genesis Franchise Factory (GFF)
 
+Repository identifier: `genesis-franchise-factory`
+
 **[L6] Content-Pipeline-Orchestrator des Genesis-Ökosystems** — erstes eigenständiges Repo der Franchise Factory (AD-20–AD-43), gebaut am 13.09.2026 aus den kanonischen Specs im Org-Archiv (`a-townchain-os-docs/docs/archive/monorepo-full/src/modules/atc-franchise`).
 
 > **Plattform-Regel (verbindlich):** GFF sitzt **über** der Genesis Engine (GCL v2.0) und ist strikte Plattform — **keinerlei Abhängigkeit zu Genesis Chronicles**. Das Spec-Gate (CI) erzwingt dies maschinell.
