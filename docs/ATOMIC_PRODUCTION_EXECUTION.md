@@ -2,7 +2,7 @@
 
 ## Zweck
 
-Dieses Modul verbindet Rezepte, Produktionsstationen, Inventare, zeitbasierte Crafting-Jobs, Werkzeuge und optionale Worker/NPC-Zuweisungen zu einem deterministischen Produktionsablauf.
+Dieses Modul verbindet Rezepte, Produktionsstationen, Inventare, zeitbasierte Crafting-Jobs, Werkzeuge, Worker/NPC-Zuweisungen und persistierbare Resume-Zustände zu einem deterministischen Produktionsablauf.
 
 ## Start einer Produktion
 
@@ -49,11 +49,34 @@ Input und Output besitzen getrennte Stack-Limits:
 - exklusive Belegung über `available`
 - Zuordnung zur Stations-ID
 - deterministisches Freigeben
-- deterministische Dauerberechnung über `effective_duration()`
+- deterministische Dauerberechnung
 
-`ProductionJob::worker_id` bleibt optional, sodass Jobs weiterhin ohne Worker gestartet werden können. `assign_worker()` verhindert Doppelzuweisung; `release_worker()` löst die Zuordnung wieder.
+`assign_worker()` macht die Skill-Auswirkung autoritativ für den Job: `total_ticks` und `remaining_ticks` werden beim ersten Worker-Assignment auf die effektive Dauer gesetzt. Doppelzuweisung ist verboten.
 
-Die Skill-Wirkung ist jetzt tatsächlich in der Jobdauer materialisiert: Skill `0` behält die Basisdauer, Skill `1000` reduziert sie deterministisch auf 50 %, mit mindestens einem Tick. Die Anpassung erfolgt beim Worker-Assignment und setzt `total_ticks` und `remaining_ticks` gemeinsam, bevor der Job weiter tickt.
+`release_worker()` entfernt die Job-Zuordnung und macht den Worker wieder verfügbar. Die Freigabe muss nach erfolgreichem Produktionsabschluss durch den Aufrufer erfolgen; `finish_production` bleibt bewusst Worker-agnostisch.
+
+## Persistenz und Wiederaufnahme
+
+`ProductionJobState` ist ein deterministischer Snapshot eines laufenden Produktionsjobs. Gespeichert werden:
+
+- Rezept-ID
+- Stations-ID
+- verbleibende und gesamte Ticks
+- Pausezustand
+- Output-ID und Menge
+- Werkzeug-ID
+- Worker-ID
+- Output-Commit-Status
+
+`ProductionJobState::capture()` erzeugt einen Snapshot.
+
+`restore_production_job()` stellt einen bereits identifizierten Job wieder her. Vor der Mutation werden Zustand, Rezept-ID, Stations-ID und Output-Identität validiert. Ein ungültiger oder nicht passender Snapshot verändert den Zieljob nicht.
+
+Die Wiederaufnahme rekonstruiert absichtlich keinen neuen Stationsslot und konsumiert keine Ressourcen erneut. Persistenz ist damit eine Zustandswiederherstellung eines bereits gestarteten Jobs, keine zweite Job-Erzeugung.
+
+## Pause und Resume
+
+Der Pausezustand wird persistiert. Ein pausierter `CraftingJob` verarbeitet keine Ticks. Nach erfolgreicher Wiederherstellung kann der Job über die vorhandenen `resume()`-/`tick()`-Operationen fortgesetzt werden.
 
 ## Abschluss
 
@@ -63,7 +86,7 @@ Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCom
 
 ## Datenfluss
 
-`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Worker-Zuweisung → Skill-Anpassung → Queue/Tick → Output-Lagerprüfung → Output → Kapazitätsfreigabe → Worker-Freigabe`
+`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Worker-Zuweisung/Skill → Queue/Tick → Snapshot → Restore → Output-Lagerprüfung → Output → Stationsfreigabe → Worker-Freigabe`
 
 ## Fehlerklassen
 
@@ -77,6 +100,11 @@ Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCom
 - `InputStorageBlocked`
 - `OutputBlocked`
 - `AlreadyCompleted`
+- `ProductionPersistenceFailure::InvalidState`
+- `ProductionPersistenceFailure::RecipeMismatch`
+- `ProductionPersistenceFailure::StationMismatch`
+- `ProductionPersistenceFailure::OutputMismatch`
+- `ProductionPersistenceFailure::AlreadyCompleted`
 
 ## Tests
 
@@ -91,17 +119,20 @@ Die Implementierung enthält Tests für:
 - zeitgesteuerten Abschluss
 - Output-Erzeugung
 - Werkzeugverschleiß
-- Freigabe der Stationskapazität
-- Schutz gegen doppelte Output-Erzeugung
-- blockierten Output ohne Freigabe des laufenden Jobs
 - exklusive Worker-Zuweisung
 - Worker-Freigabe
-- deterministische Skill-Dauer und tatsächliche Jobdauer-Anpassung
+- Skill-basierte autoritative Jobdauer
+- Mindestdauer von einem Tick
 - ungültige Worker-Konfiguration
+- Snapshot-Erzeugung
+- Wiederaufnahme mit erhaltenem Fortschritt
+- Wiederaufnahme eines pausierten Jobs
+- Ablehnung inkonsistenter Persistenzdaten ohne Mutation
+- Ablehnung von Rezept-/Identitätsabweichungen
 
 ## Noch offene technische Punkte
 
-Worker-/NPC-Zuweisung und die deterministische Skill-Wirkung sind implementiert. Noch offen sind Worker-Persistenz/Wiederaufnahme, Abwesenheit/Unterbrechung, Multiplayer-Autorität, Qualitäts- und weiterführende Skill-Systeme sowie eine vollständige Produktionsökonomie.
+Die deterministische Persistenz-/Resume-Foundation ist implementiert. Noch offen sind ein konkretes dauerhaftes Dateiformat bzw. Serializer, Crash-Atomicity des externen Speichers, Worker-Wiederzuordnung nach Prozessneustart, Abwesenheit/Unterbrechung, Multiplayer-Autorität, Qualitäts- und fortgeschrittene Skill-Systeme sowie eine vollständige Produktionsökonomie.
 
 ## Status
 
