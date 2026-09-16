@@ -54,7 +54,7 @@ Jeder Pass besitzt eine stabile `ShadowPassId` aus Licht-ID und Slice. Die Planu
 
 ## Shadow-Projektionsmathematik
 
-`shadow_math.rs` implementiert nun backend-neutrale Directional-Light-Projektionsmatrizen:
+`shadow_math.rs` implementiert backend-neutrale Directional-Light-Projektionsmatrizen:
 
 - validiert Kamera-Projektion und Kamera-Basis
 - validiert Cascade-Nah-/Fernbereich
@@ -65,7 +65,13 @@ Jeder Pass besitzt eine stabile `ShadowPassId` aus Licht-ID und Slice. Die Planu
 - kombiniert View und Orthographic Projection
 - weist nicht-finite Ergebnisse zurück
 
-Die Matrizen sind noch nicht an konkrete GPU-Clip-Space-Konventionen eines einzelnen Backends gebunden. Texel-Snapping und vollständige CSM-Stabilisierung folgen als eigene Stufe.
+### CSM-Stabilisierung
+
+`directional_shadow_matrix_stable()` erweitert die Projektion um optionales Texel-Snapping. Bei gesetzter `ShadowMapResolution` wird der Cascade-Mittelpunkt im Light-Space auf ganze Shadow-Map-Texel quantisiert. Dadurch werden kleine Kamera-Bewegungen nicht direkt in kontinuierliche Shadow-Map-Translationen umgesetzt; das reduziert den typischen CSM-Shimmer.
+
+Die Stabilisierung bleibt backend-neutral. Sie verändert weder `LightRegistry` noch den Render-Graph und führt keine GPU-Ressourcenallokation aus. Die Auflösung wird direkt aus `ShadowMapResolution` verwendet, sodass dieselbe Konfiguration für Planung und Stabilisierung gilt.
+
+Die ungestabilisierte API `directional_shadow_matrix()` bleibt als deterministischer Basispfad erhalten und delegiert intern an die neue Implementierung ohne Snapping.
 
 ## Architekturgrenze
 
@@ -73,7 +79,7 @@ Die Shadow-Schicht erzeugt keine Vulkan-, D3D12-, Metal- oder OpenGL-Kommandos u
 
 ## Datenfluss
 
-`LightRegistry → ShadowConfig → Cascade/Projection Selection → ShadowFramePlan → Shadow Projection Math → RenderPassGraph (Shadow → Lighting) → Backend Shadow Resources → Shadow Depth Pass → Lighting Shader`
+`LightRegistry → ShadowConfig → Cascade/Projection Selection → ShadowFramePlan → Shadow Projection Math → CSM Texel Snapping → RenderPassGraph (Shadow → Lighting) → Backend Shadow Resources → Shadow Depth Pass → Lighting Shader`
 
 ## Fehlerklassen
 
@@ -102,6 +108,7 @@ Implementiert sind Tests für:
 - `Shadow → Lighting` Render-Graph-Abhängigkeit
 - fail-closed Behandlung nicht darstellbarer Licht-IDs
 - deterministische Shadow-Matrizen
+- deterministische stabilisierte Shadow-Matrizen
 - Null-Lichtrichtung
 - ungültige Cascade-Matrixbereiche
 
@@ -109,17 +116,16 @@ Implementiert sind Tests für:
 
 1. echte Depth-Texture-Allokation
 2. Shadow-Framebuffer/Render-Target-Aufbau
-3. Texel-Snapping und CSM-Stabilisierung
+3. Shadow-Caster-Culling pro Pass
 4. Point-Light-Cubemap-Rendering
 5. Spot-Light-Shadow-Maps
-6. Shadow-Caster-Culling pro Pass
-7. PCF/PCSS-Filterung in den Lighting-Shadern
-8. Kontakt-/Self-Shadowing
-9. Shadow-Caching und Update-Frequenz
-10. Vulkan-Ausführung
-11. Direct3D 12-Ausführung
-12. Metal-Ausführung
-13. GPU-Profiling und Speicherbudgetierung
+6. PCF/PCSS-Filterung in den Lighting-Shadern
+7. Kontakt-/Self-Shadowing
+8. Shadow-Caching und Update-Frequenz
+9. Vulkan-Ausführung
+10. Direct3D 12-Ausführung
+11. Metal-Ausführung
+12. GPU-Profiling und Speicherbudgetierung
 
 ## Status
 
@@ -130,5 +136,7 @@ Implementiert sind Tests für:
 `RENDER_GRAPH_SHADOW_TO_LIGHTING_IMPLEMENTED`
 
 `DIRECTIONAL_SHADOW_PROJECTION_MATH_IMPLEMENTED`
+
+`CSM_TEXEL_SNAPPING_IMPLEMENTED`
 
 `GPU_SHADOW_RENDERING_NOT_ESTABLISHED`
