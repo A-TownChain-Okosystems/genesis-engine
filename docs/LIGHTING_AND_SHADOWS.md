@@ -52,7 +52,20 @@ Jeder Pass besitzt eine stabile `ShadowPassId` aus Licht-ID und Slice. Die Planu
 5. Shadow-Pass- und Resource-IDs werden deterministisch aus `LightId` und Slice abgeleitet.
 6. Nicht darstellbare `LightId`-Werte werden fail-closed mit `LightIdTooLarge` abgewiesen.
 
-Damit ist die Render-Graph-Abhängigkeit implementiert, ohne bereits eine konkrete GPU-API vorzutäuschen.
+## Shadow-Projektionsmathematik
+
+`shadow_math.rs` implementiert nun backend-neutrale Directional-Light-Projektionsmatrizen:
+
+- validiert Kamera-Projektion und Kamera-Basis
+- validiert Cascade-Nah-/Fernbereich
+- normalisiert die Licht-Richtung
+- berechnet einen stabilen Frustum-Mittelpunkt für die Cascade
+- bestimmt eine orthografische Shadow-Projektion
+- erzeugt eine deterministische Light-View-Matrix
+- kombiniert View und Orthographic Projection
+- weist nicht-finite Ergebnisse zurück
+
+Die Matrizen sind noch nicht an konkrete GPU-Clip-Space-Konventionen eines einzelnen Backends gebunden. Texel-Snapping und vollständige CSM-Stabilisierung folgen als eigene Stufe.
 
 ## Architekturgrenze
 
@@ -60,9 +73,7 @@ Die Shadow-Schicht erzeugt keine Vulkan-, D3D12-, Metal- oder OpenGL-Kommandos u
 
 ## Datenfluss
 
-`LightRegistry → ShadowConfig → Cascade/Projection Selection → ShadowFramePlan → RenderPassGraph (Shadow → Lighting) → Backend Shadow Resources → Shadow Depth Pass → Lighting Shader`
-
-Die Render-Graph-Planung ist implementiert. Die tatsächliche GPU-Ausführung bleibt offen.
+`LightRegistry → ShadowConfig → Cascade/Projection Selection → ShadowFramePlan → Shadow Projection Math → RenderPassGraph (Shadow → Lighting) → Backend Shadow Resources → Shadow Depth Pass → Lighting Shader`
 
 ## Fehlerklassen
 
@@ -72,6 +83,9 @@ Die Render-Graph-Planung ist implementiert. Die tatsächliche GPU-Ausführung bl
 - `UnsupportedLight`
 - `LightIdTooLarge`
 - `ShadowGraphError::Graph(...)`
+- `ShadowMathError::InvalidCamera`
+- `ShadowMathError::InvalidLightDirection`
+- `ShadowMathError::NonFinite`
 
 ## Tests
 
@@ -87,23 +101,25 @@ Implementiert sind Tests für:
 - stabile Pass-Reihenfolge
 - `Shadow → Lighting` Render-Graph-Abhängigkeit
 - fail-closed Behandlung nicht darstellbarer Licht-IDs
+- deterministische Shadow-Matrizen
+- Null-Lichtrichtung
+- ungültige Cascade-Matrixbereiche
 
 ## Noch offene GPU-Stufen
 
 1. echte Depth-Texture-Allokation
 2. Shadow-Framebuffer/Render-Target-Aufbau
-3. Directional-Cascade View/Projection-Matrizen
-4. Texel-Snapping und CSM-Stabilisierung
-5. Point-Light-Cubemap-Rendering
-6. Spot-Light-Shadow-Maps
-7. Shadow-Caster-Culling pro Pass
-8. PCF/PCSS-Filterung in den Lighting-Shadern
-9. Kontakt-/Self-Shadowing
-10. Shadow-Caching und Update-Frequenz
-11. Vulkan-Ausführung
-12. Direct3D 12-Ausführung
-13. Metal-Ausführung
-14. GPU-Profiling und Speicherbudgetierung
+3. Texel-Snapping und CSM-Stabilisierung
+4. Point-Light-Cubemap-Rendering
+5. Spot-Light-Shadow-Maps
+6. Shadow-Caster-Culling pro Pass
+7. PCF/PCSS-Filterung in den Lighting-Shadern
+8. Kontakt-/Self-Shadowing
+9. Shadow-Caching und Update-Frequenz
+10. Vulkan-Ausführung
+11. Direct3D 12-Ausführung
+12. Metal-Ausführung
+13. GPU-Profiling und Speicherbudgetierung
 
 ## Status
 
@@ -112,5 +128,7 @@ Implementiert sind Tests für:
 `SHADOW_PASS_PLANNING_IMPLEMENTED`
 
 `RENDER_GRAPH_SHADOW_TO_LIGHTING_IMPLEMENTED`
+
+`DIRECTIONAL_SHADOW_PROJECTION_MATH_IMPLEMENTED`
 
 `GPU_SHADOW_RENDERING_NOT_ESTABLISHED`
