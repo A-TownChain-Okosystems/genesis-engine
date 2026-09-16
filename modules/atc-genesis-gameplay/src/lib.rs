@@ -1,7 +1,7 @@
 use atc_genesis_ecs::World;
 use atc_genesis_input::{InputState, Key};
 use atc_genesis_platform::EntityId;
-pub mod genre; pub mod combat; pub mod interaction; pub mod systems; pub mod presets; pub mod items; pub mod item_systems; pub mod plants; pub mod animals; pub mod technology; pub mod building; pub mod needs; pub mod crafting; pub mod economy; pub mod crafting_jobs;
+pub mod genre; pub mod combat; pub mod interaction; pub mod systems; pub mod presets; pub mod items; pub mod item_systems; pub mod plants; pub mod animals; pub mod technology; pub mod building; pub mod needs; pub mod crafting; pub mod economy; pub mod crafting_jobs; pub mod production;
 pub use genre::{Capability, Genre, GenreProfile, ALL_GENRES, UNIVERSAL_CAPABILITIES, profile};
 pub use combat::{Attack, CombatEvent, Combatant, Damage, DamageType, Health, TeamRelation};
 pub use interaction::{Ability, AbilityState, Interaction, InteractionKind};
@@ -16,6 +16,7 @@ pub use needs::{next_need_action, NeedAction, Needs};
 pub use crafting::{CraftFailure, CraftingIngredient, CraftingRecipe, BASIC_TOOLS_RECIPE, WORKBENCH_RECIPE};
 pub use economy::{Market, TradeOffer, Wallet};
 pub use crafting_jobs::{CraftingJob, CraftingQueue};
+pub use production::{ProductionStation, ProductionStationKind, ToolState, FORGE, KITCHEN, WORKBENCH};
 pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, ReplicatedTransform, ReplicationBuffer, SpaceState, StrategyOrder, StrategyQueue};
 
 #[derive(Clone, Copy, Debug, PartialEq)] pub struct MovementConfig { pub speed:f32,pub axis_x:Option<u8>,pub axis_z:Option<u8> }
