@@ -53,7 +53,7 @@ Input und Output besitzen getrennte Stack-Limits:
 
 `ProductionJob::worker_id` bleibt optional, sodass Jobs weiterhin ohne Worker gestartet werden können. `assign_worker()` verhindert Doppelzuweisung; `release_worker()` löst die Zuordnung wieder.
 
-Die Skill-Dauer ist derzeit ein deterministischer Simulationswert und verändert nicht automatisch die bereits erzeugte `CraftingJob`-Dauer. Eine spätere Produktionsplanung kann diesen Wert vor Job-Erzeugung als autoritative Dauer verwenden.
+Die Skill-Wirkung ist jetzt tatsächlich in der Jobdauer materialisiert: Skill `0` behält die Basisdauer, Skill `1000` reduziert sie deterministisch auf 50 %, mit mindestens einem Tick. Die Anpassung erfolgt beim Worker-Assignment und setzt `total_ticks` und `remaining_ticks` gemeinsam, bevor der Job weiter tickt.
 
 ## Abschluss
 
@@ -63,7 +63,7 @@ Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCom
 
 ## Datenfluss
 
-`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Worker-Zuweisung → Queue/Tick → Output-Lagerprüfung → Output → Kapazitätsfreigabe → Worker-Freigabe`
+`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Worker-Zuweisung → Skill-Anpassung → Queue/Tick → Output-Lagerprüfung → Output → Kapazitätsfreigabe → Worker-Freigabe`
 
 ## Fehlerklassen
 
@@ -96,12 +96,12 @@ Die Implementierung enthält Tests für:
 - blockierten Output ohne Freigabe des laufenden Jobs
 - exklusive Worker-Zuweisung
 - Worker-Freigabe
-- deterministische Skill-Dauer
+- deterministische Skill-Dauer und tatsächliche Jobdauer-Anpassung
 - ungültige Worker-Konfiguration
 
 ## Noch offene technische Punkte
 
-Worker-/NPC-Zuweisung ist als deterministische Foundation implementiert. Noch offen sind autoritative Skill-Auswirkung auf Jobdauer, Worker-Persistenz/Wiederaufnahme, Abwesenheit/Unterbrechung, Multiplayer-Autorität, Qualitäts- und Skill-Systeme sowie eine vollständige Produktionsökonomie.
+Worker-/NPC-Zuweisung und die deterministische Skill-Wirkung sind implementiert. Noch offen sind Worker-Persistenz/Wiederaufnahme, Abwesenheit/Unterbrechung, Multiplayer-Autorität, Qualitäts- und weiterführende Skill-Systeme sowie eine vollständige Produktionsökonomie.
 
 ## Status
 
