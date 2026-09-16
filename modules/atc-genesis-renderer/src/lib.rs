@@ -2,6 +2,7 @@ use atc_genesis_platform::{AssetId, EntityId, FrameId, Renderer, Transform};
 pub mod animation;
 pub mod backend;
 pub mod batching;
+pub mod bounds;
 pub mod camera;
 pub mod commands;
 pub mod ecs;
@@ -17,7 +18,8 @@ pub mod resources;
 pub use animation::SkinnedPose;
 pub use backend::{BackendRenderer, CommandBufferBackend, GraphicsBackend, NullBackend, RenderBackend, RenderCapabilities};
 pub use batching::{build_batches, RenderBatch, RenderItem};
-pub use camera::{CameraError, CameraProjection};
+pub use bounds::{Aabb, BoundingSphere};
+pub use camera::{CameraError, CameraProjection, CameraView};
 pub use commands::{RenderCommand, RenderCommandError, RenderCommandStream};
 pub use frame::{FrameSchedule, FrameScheduleError, FrameScheduler, FrameTiming};
 pub use frustum::{Frustum, FrustumError, Plane};
@@ -46,6 +48,8 @@ impl RenderGraph {
     pub fn commands(&self)->&[DrawCommand]{&self.commands}
     pub fn sort_deterministic(&mut self){self.commands.sort_by(|a,b|a.entity.0.cmp(&b.entity.0).then_with(||a.mesh.cmp(&b.mesh)).then_with(||a.material.cmp(&b.material)))}
     pub fn cull_distance(&mut self,camera:&Camera){self.commands.retain(|c|camera.visible_distance(c.transform.translation)&&camera.in_front(c.transform.translation))}
+    pub fn cull_spheres(&mut self,frustum:&Frustum,spheres:&[(EntityId,BoundingSphere)]){self.commands.retain(|c|spheres.iter().find(|(id,_)|*id==c.entity).map(|(_,s)|s.intersects_frustum(frustum)).unwrap_or(true))}
+    pub fn cull_aabbs(&mut self,frustum:&Frustum,aabbs:&[(EntityId,Aabb)]){self.commands.retain(|c|aabbs.iter().find(|(id,_)|*id==c.entity).map(|(_,a)|a.intersects_frustum(frustum)).unwrap_or(true))}
     pub fn rebuild_from_world(&mut self,world:&atc_genesis_ecs::World){self.clear();for(id,transform)in world.query_world_transforms(){self.push(DrawCommand{entity:id,transform,mesh:None,material:None});}self.sort_deterministic()}
 }
 #[derive(Default)]
