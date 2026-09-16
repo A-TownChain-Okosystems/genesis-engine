@@ -6,12 +6,14 @@ pub mod fluid;
 pub mod gpu;
 pub mod ocean;
 pub mod particles;
+pub mod vehicle;
 pub mod water;
 pub use collision::{Aabb, Collider, CollisionWorld};
 pub use fluid::{FluidCell, FluidConfig, FluidError, FluidVolume3d};
 pub use gpu::{ComputeBackend, ComputeDispatch, GpuFluidError, GpuFluidPipeline};
 pub use ocean::{FftOcean, OceanConfig, OceanError};
 pub use particles::{FlipPicGrid, Particle, ParticleConfig, ParticleError, ParticleMethod, SphSystem};
+pub use vehicle::{step_air, step_ground, step_water, AirVehicleConfig, GroundVehicleConfig, VehicleDomain, VehicleEnvironment, VehicleError, VehicleInput, VehicleState, WaterVehicleConfig};
 pub use water::{WaterBody, WaterConfig, WaterError, WaterSample, WaterSurface, WaterVolume3d};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
