@@ -1,7 +1,7 @@
 use atc_genesis_ecs::World;
 use atc_genesis_input::{InputState, Key};
 use atc_genesis_platform::EntityId;
-pub mod genre; pub mod combat; pub mod interaction; pub mod systems; pub mod presets; pub mod items; pub mod item_systems; pub mod plants; pub mod animals; pub mod technology; pub mod building;
+pub mod genre; pub mod combat; pub mod interaction; pub mod systems; pub mod presets; pub mod items; pub mod item_systems; pub mod plants; pub mod animals; pub mod technology; pub mod building; pub mod needs;
 pub use genre::{Capability, Genre, GenreProfile, ALL_GENRES, UNIVERSAL_CAPABILITIES, profile};
 pub use combat::{Attack, CombatEvent, Combatant, Damage, DamageType, Health, TeamRelation};
 pub use interaction::{Ability, AbilityState, Interaction, InteractionKind};
@@ -12,6 +12,7 @@ pub use plants::{PlantDefinition, PlantEnvironment, PlantInstance, PlantStage, C
 pub use animals::{AnimalDefinition, AnimalEnvironment, AnimalInstance, AnimalKind, AnimalState, Herd, DEER, WOLF, COW};
 pub use technology::{TechnologyCategory, TechnologyDefinition, TechnologyTier, TechnologyTree, FurnitureDefinition, FurnitureInstance, FurnitureKind, FurnitureRoom, AGRICULTURE, CONSTRUCTION, ELECTRICITY, COMPUTING, CHAIR, TABLE, BED, CABINET};
 pub use building::{ConstructionDefinition, ConstructionInstance, ConstructionSite, ResourceCost, ResourceStock, HOUSE, WORKSHOP};
+pub use needs::{next_need_action, NeedAction, Needs};
 pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, ReplicatedTransform, ReplicationBuffer, SpaceState, StrategyOrder, StrategyQueue};
 
 #[derive(Clone, Copy, Debug, PartialEq)] pub struct MovementConfig { pub speed:f32,pub axis_x:Option<u8>,pub axis_z:Option<u8> }
