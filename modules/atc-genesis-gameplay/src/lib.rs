@@ -1,7 +1,7 @@
 use atc_genesis_ecs::World;
 use atc_genesis_input::{InputState, Key};
 use atc_genesis_platform::EntityId;
-pub mod genre; pub mod combat; pub mod interaction; pub mod systems; pub mod presets; pub mod items; pub mod item_systems; pub mod plants; pub mod animals; pub mod technology; pub mod building; pub mod needs; pub mod crafting; pub mod economy; pub mod crafting_jobs; pub mod production; pub mod production_execution; pub mod production_workers; pub mod production_persistence;
+pub mod genre; pub mod combat; pub mod interaction; pub mod systems; pub mod presets; pub mod items; pub mod item_systems; pub mod plants; pub mod animals; pub mod technology; pub mod building; pub mod needs; pub mod crafting; pub mod economy; pub mod crafting_jobs; pub mod production; pub mod production_execution; pub mod production_workers; pub mod production_persistence; pub mod production_store;
 pub use genre::{Capability, Genre, GenreProfile, ALL_GENRES, UNIVERSAL_CAPABILITIES, profile};
 pub use combat::{Attack, CombatEvent, Combatant, Damage, DamageType, Health, TeamRelation};
 pub use interaction::{Ability, AbilityState, Interaction, InteractionKind};
@@ -20,6 +20,7 @@ pub use production::{ProductionStation, ProductionStationKind, ToolState, FORGE,
 pub use production_execution::{finish_production, start_production, ProductionFailure, ProductionJob, ProductionToolRequirement};
 pub use production_workers::{assign_worker, release_worker, ProductionWorker};
 pub use production_persistence::{restore_production_job, ProductionJobState, ProductionPersistenceFailure};
+pub use production_store::{ProductionJournal, ProductionRecord, ProductionStoreFailure, PRODUCTION_STATE_VERSION};
 pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, ReplicatedTransform, ReplicationBuffer, SpaceState, StrategyOrder, StrategyQueue};
 
 #[derive(Clone, Copy, Debug, PartialEq)] pub struct MovementConfig { pub speed:f32,pub axis_x:Option<u8>,pub axis_z:Option<u8> }
