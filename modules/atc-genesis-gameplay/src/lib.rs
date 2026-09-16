@@ -6,10 +6,12 @@ pub mod combat;
 pub mod interaction;
 pub mod systems;
 pub mod presets;
+pub mod items;
 pub use genre::{Capability, Genre, GenreProfile, ALL_GENRES, UNIVERSAL_CAPABILITIES, profile};
 pub use combat::{Attack, CombatEvent, Combatant, Damage, DamageType, Health, TeamRelation};
 pub use interaction::{Ability, AbilityState, Interaction, InteractionKind};
 pub use presets::{AbilityBarPreset, CharacterSlotPreset, EquipmentPreset, InventoryPreset, LoadoutPreset, SkillTreePreset};
+pub use items::{DamageType as ItemDamageType, Inventory, ItemDefinition, ItemKind, ItemStack, WeaponDefinition, WeaponInstance, WeaponKind, WeaponLoadout, WeaponFireResult};
 pub use systems::{BuildCell, BuildGrid, CharacterState, EconomyBalance, FlightState, InputFrame, ModDescriptor, ModRegistry, NarrativeEvent, NarrativeState, NetworkTick, RaceState, ReplicatedTransform, ReplicationBuffer, SpaceState, StrategyOrder, StrategyQueue};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
