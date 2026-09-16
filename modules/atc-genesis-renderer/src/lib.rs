@@ -18,7 +18,7 @@ pub mod resources;
 pub use animation::SkinnedPose;
 pub use backend::{BackendRenderer, CommandBufferBackend, GraphicsBackend, NullBackend, RenderBackend, RenderCapabilities};
 pub use batching::{build_batches, RenderBatch, RenderItem};
-pub use bounds::{Aabb, BoundingSphere};
+pub use bounds::{Aabb, BoundingSphere, Bvh, BvhError, BvhLeaf, BvhNode};
 pub use camera::{CameraError, CameraProjection, CameraView};
 pub use commands::{RenderCommand, RenderCommandError, RenderCommandStream};
 pub use frame::{FrameSchedule, FrameScheduleError, FrameScheduler, FrameTiming};
@@ -50,6 +50,7 @@ impl RenderGraph {
     pub fn cull_distance(&mut self,camera:&Camera){self.commands.retain(|c|camera.visible_distance(c.transform.translation)&&camera.in_front(c.transform.translation))}
     pub fn cull_spheres(&mut self,frustum:&Frustum,spheres:&[(EntityId,BoundingSphere)]){self.commands.retain(|c|spheres.iter().find(|(id,_)|*id==c.entity).map(|(_,s)|s.intersects_frustum(frustum)).unwrap_or(true))}
     pub fn cull_aabbs(&mut self,frustum:&Frustum,aabbs:&[(EntityId,Aabb)]){self.commands.retain(|c|aabbs.iter().find(|(id,_)|*id==c.entity).map(|(_,a)|a.intersects_frustum(frustum)).unwrap_or(true))}
+    pub fn cull_bvh(&mut self,frustum:&Frustum,bvh:&Bvh){let visible=bvh.query_frustum(frustum);self.commands.retain(|c|visible.binary_search(&c.entity.0).is_ok())}
     pub fn rebuild_from_world(&mut self,world:&atc_genesis_ecs::World){self.clear();for(id,transform)in world.query_world_transforms(){self.push(DrawCommand{entity:id,transform,mesh:None,material:None});}self.sort_deterministic()}
 }
 #[derive(Default)]
