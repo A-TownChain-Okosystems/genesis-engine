@@ -6,18 +6,18 @@ Dieses Modul verbindet Rezepte, Produktionsstationen, Inventare, zeitbasierte Cr
 
 ## Start einer Produktion
 
-`start_production` führt alle Vorbedingungen vor der Mutation aus:
+`start_production` validiert sämtliche Vorbedingungen vor einer dauerhaften Inventarmutation:
 
 1. Rezeptstruktur validieren
-2. Produktionsstation prüfen
+2. Produktionsstation und Rezeptbindung prüfen
 3. Technologieanforderung prüfen
 4. Zutatenbestand prüfen
-5. Werkzeugzustand prüfen
+5. optionale Werkzeuganforderung und Werkzeugzustand prüfen
 6. `CraftingJob` erzeugen
-7. Zutaten atomar aus dem Spielerinventar entfernen
-8. Werkzeug genau einmal verbrauchen
+7. Werkzeug genau einmal verbrauchen
+8. Zutaten atomar aus dem Spielerinventar entfernen
 
-Fehlgeschlagene Vorbedingungen verändern das Inventar nicht.
+Bei Validierungsfehlern bleiben Inventar und Werkzeug unverändert. Die Stations-ID ist als statische ID ausgelegt, damit die vordefinierten Stationskonstanten typsicher bleiben.
 
 ## Abschluss
 
@@ -25,7 +25,7 @@ Fehlgeschlagene Vorbedingungen verändern das Inventar nicht.
 
 ## Datenfluss
 
-`Technologie → Ressourcen → Inventar → Station → Rezeptvalidierung → Input-Verbrauch → CraftingJob → Queue/Tick → Werkzeugverschleiß → Output`
+`Technologie → Ressourcen → Inventar → Station → Rezeptvalidierung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Queue/Tick → Werkzeugverschleiß → Output`
 
 ## Fehlerklassen
 
@@ -42,14 +42,17 @@ Fehlgeschlagene Vorbedingungen verändern das Inventar nicht.
 Die Implementierung enthält Tests für:
 
 - atomare Validierungsfehler
+- fehlende oder falsche Werkzeuge ohne Mutation
 - Verbrauch der Eingaben
 - zeitgesteuerten Abschluss
 - Ausgabe in das Stationsinventar
-- Werkzeugverbrauch
+- Werkzeugverschleiß
 
-## Produktionsgrenzen
+## Noch offene technische Punkte
 
-Noch nicht umgesetzt sind Worker-/NPC-Zuweisung, parallele Stationsbelegung anhand realer Kapazitäten, Persistenz/Wiederaufnahme, Multiplayer-Autorität, Qualitäts- und Skill-Systeme sowie eine vollständige Produktionsökonomie.
+`ProductionStation::capacity` validiert derzeit die Nutzbarkeit der Station, begrenzt aber noch nicht die Anzahl paralleler Jobs oder die Anzahl gespeicherter Inventarstacks. Diese Semantik muss vor einer Produktionsfreigabe explizit als Job-Kapazität oder Lagerkapazität modelliert werden.
+
+Weitere offene Punkte sind Worker-/NPC-Zuweisung, Persistenz/Wiederaufnahme, Multiplayer-Autorität, Qualitäts- und Skill-Systeme sowie eine vollständige Produktionsökonomie.
 
 ## Status
 
