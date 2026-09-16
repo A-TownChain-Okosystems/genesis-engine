@@ -7,7 +7,7 @@ pub enum ProductionStationKind { Workbench, Forge, Kitchen, Loom, Laboratory }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProductionStation {
-    pub id: String,
+    pub id: &'static str,
     pub kind: ProductionStationKind,
     pub capacity: u16,
     pub enabled: bool,
@@ -16,8 +16,7 @@ pub struct ProductionStation {
 }
 
 impl ProductionStation {
-    pub fn new(id: impl Into<String>, kind: ProductionStationKind, capacity: u16) -> Option<Self> {
-        let id = id.into();
+    pub fn new(id: &'static str, kind: ProductionStationKind, capacity: u16) -> Option<Self> {
         if id.is_empty() || capacity == 0 { return None; }
         Some(Self { id, kind, capacity, enabled: true, input: Inventory::default(), output: Inventory::default() })
     }
