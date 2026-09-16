@@ -14,35 +14,45 @@ Dieses Modul verbindet Rezepte, Produktionsstationen, Inventare, zeitbasierte Cr
 4. Technologieanforderung prüfen
 5. Zutatenbestand prüfen
 6. optionale Werkzeuganforderung und Werkzeugzustand prüfen
-7. `CraftingJob` erzeugen
-8. Stationsslot reservieren
-9. Werkzeug genau einmal verbrauchen
-10. Zutaten aus dem Spielerinventar entfernen
+7. Input-Lagerkapazität prüfen
+8. `CraftingJob` erzeugen
+9. Stationsslot reservieren
+10. Werkzeug genau einmal verbrauchen
+11. Zutaten aus dem Spielerinventar entfernen
 
 Bei Validierungsfehlern bleiben Inventar, Werkzeug und Stationsbelegung unverändert. Schlägt eine Mutation nach der Reservierung fehl, wird die Stationsreservierung wieder freigegeben.
 
 ## Stationskapazität
 
-`ProductionStation::capacity` ist jetzt explizit als **maximale Anzahl gleichzeitig aktiver Produktionsjobs** modelliert.
+`ProductionStation::capacity` ist die maximale Anzahl gleichzeitig aktiver Produktionsjobs.
 
 - `active_jobs` zählt reservierte Produktionsjobs.
 - `reserve_job()` verweigert weitere Jobs bei voller Kapazität.
 - `release_job()` gibt einen Slot deterministisch frei.
 - Eine deaktivierte Station kann keine neuen Jobs reservieren.
 
-Damit ist `capacity` nicht mit Lager-/Inventarkapazität zu verwechseln. Die Input-/Output-Inventare besitzen weiterhin eine separate, noch zu modellierende Lagerbegrenzung.
+## Lagerkapazität
+
+Input und Output besitzen getrennte Stack-Limits:
+
+- `input_slots`
+- `output_slots`
+
+`input_has_storage()` und `output_has_storage()` prüfen vorhandene freie Stackplätze oder noch nicht volle bestehende Stacks. Ungültige Einlagerungen werden vor der Mutation abgewiesen.
+
+Damit sind **Job-Kapazität** und **Lagerkapazität** getrennte Ressourcen und werden nicht mehr über dasselbe Feld semantisch vermischt.
 
 ## Abschluss
 
-`finish_production` akzeptiert nur vollständig abgearbeitete Jobs der korrekten Station. Nach erfolgreicher Output-Erzeugung wird der Stationsslot freigegeben.
+`finish_production` akzeptiert nur vollständig abgearbeitete Jobs der korrekten Station. Vor der Output-Mutation wird die verfügbare Output-Lagerkapazität geprüft. Nach erfolgreicher Output-Erzeugung wird der Stationsslot freigegeben.
 
-Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCompleted`). Dadurch wird eine doppelte Output-Erzeugung verhindert.
+Ein bereits abgeschlossener Job kann nicht erneut ausgegeben werden (`AlreadyCompleted`). Dadurch wird doppelte Output-Erzeugung verhindert.
 
-Eine deaktivierte Station oder eine nicht passende Stations-ID blockiert die Ausgabe.
+Wenn der Output-Speicher voll ist, bleiben Job und Stationsreservierung erhalten; der Abschluss kann nach Freigabe von Lagerplatz erneut versucht werden.
 
 ## Datenfluss
 
-`Technologie → Ressourcen → Inventar → Station → Kapazitätsreservierung → Rezeptvalidierung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Queue/Tick → Werkzeugverschleiß → Output → Kapazitätsfreigabe`
+`Technologie → Ressourcen → Inventar → Station → Job-Kapazität → Rezeptvalidierung → Lagerprüfung → Werkzeugprüfung → Input-Verbrauch → CraftingJob → Queue/Tick → Werkzeugverschleiß → Output-Lagerprüfung → Output → Kapazitätsfreigabe`
 
 ## Fehlerklassen
 
@@ -53,6 +63,7 @@ Eine deaktivierte Station oder eine nicht passende Stations-ID blockiert die Aus
 - `MissingTechnology`
 - `MissingTool`
 - `ToolBroken`
+- `InputStorageBlocked`
 - `OutputBlocked`
 - `AlreadyCompleted`
 
@@ -62,19 +73,20 @@ Die Implementierung enthält Tests für:
 
 - atomare Validierungsfehler
 - Stationskapazitätsgrenze
+- Input-/Output-Stackgrenzen
+- vorhandene teilgefüllte Stacks
 - fehlende oder falsche Werkzeuge ohne Mutation
 - Verbrauch der Eingaben
 - zeitgesteuerten Abschluss
-- Ausgabe in das Stationsinventar
+- Output-Erzeugung
 - Werkzeugverschleiß
 - Freigabe der Stationskapazität
 - Schutz gegen doppelte Output-Erzeugung
+- blockierten Output ohne Freigabe des laufenden Jobs
 
 ## Noch offene technische Punkte
 
-Die Job-Kapazität ist implementiert. Noch nicht umgesetzt ist eine separate Begrenzung der Anzahl gespeicherter Input-/Output-Inventarstacks.
-
-Weitere offene Punkte sind Worker-/NPC-Zuweisung, Persistenz/Wiederaufnahme, Multiplayer-Autorität, Qualitäts- und Skill-Systeme sowie eine vollständige Produktionsökonomie.
+Die grundlegenden Job- und Lagergrenzen sind implementiert. Noch offen sind Worker-/NPC-Zuweisung, Persistenz/Wiederaufnahme, Multiplayer-Autorität, Qualitäts- und Skill-Systeme sowie eine vollständige Produktionsökonomie.
 
 ## Status
 
