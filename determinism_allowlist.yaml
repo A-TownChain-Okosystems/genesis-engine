@@ -1,0 +1,22 @@
+# ATC Determinism-Allowlist (REQ-ENG-002, SCR-0126-Programm) — genesis-engine
+# Muster wie a-townchain: Verhalten eingefroren, Welle-3 = injizierbare Clock/Nonce
+# (ATC-STD-ENG-001). Ziel: Allowlist iterativ auf 0 reduzieren.
+# Quelle der Eintraege: Monorepo-Import components/gff (SCR: GFF-Konsolidierung, 2026-09-17).
+- file: components/gff/gff/core.py
+  line: 128
+  reason: "Event-Journal-Timestamp (Pipeline-Orchestrierung, nicht konsensrelevant); Verhalten eingefroren, Welle-3: injizierbare Clock"
+- file: components/gff/gff/core.py
+  line: 132
+  reason: "now()-Default im Event-Recording (injectable via now-Parameter am Ort), Welle-3: volle Injektion"
+- file: components/gff/gff/dao.py
+  line: 54
+  reason: "ATC-9900 Deposit-Timestamp (DAO-Ledger, referenzielles Metadaten-Feld); Welle-3: injizierbare Clock"
+- file: components/gff/gff/dao.py
+  line: 64
+  reason: "ATC-9900 Withdraw-Timestamp (DAO-Ledger, referenzielles Metadaten-Feld); Welle-3: injizierbare Clock"
+- file: components/gff/gff/dao.py
+  line: 128
+  reason: "Franchise-ID-Ableitung sha256(name+owner+time) — nicht konsensrelevant (Game-Franchise-Factory); Welle-3: injizierbare Nonce"
+- file: components/gff/gff/lifecycle.py
+  line: 123
+  reason: "LifecycleManager-Uhr-Default (12-Phasen AD-43); Konstruktor injizierbar gestaltet in Welle-3"

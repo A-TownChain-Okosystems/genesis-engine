@@ -12,14 +12,16 @@ ownership:
   organization: A-TownChain-Okosystems
 technology:
   primary_language: Rust
-  secondary_language: Python
+governance:
+  security_class: S1
+  criticality: low
 -->
 
 # ATC Genesis Engine
 
 [![ATC-COMPLIANCE](https://img.shields.io/badge/ATC-COMPLIANCE-v1.0-green)](./AGENTS.md)
 
-> General-purpose, modulare Game-Engine für ECS, Weltensimulation, Rendering, Physik, Audio, Animation, Networking, AI, Editor und Franchise-Production-Workflows.
+> General-purpose, modulare Game-Engine für ECS, Weltensimulation, Rendering, Physik, Audio, Animation, Networking, AI und Editor-Workflows.
 
 **Project:** `genesis-engine`  
 **Organization:** `A-TownChain-Okosystems`  
@@ -29,41 +31,35 @@ technology:
 
 ## Overview
 
-Genesis Engine ist die **general-purpose Game-Development-Plattform** des A-TownChain-Ökosystems. Die Engine stellt wiederverwendbare Runtime-, Simulations-, Tooling-, SDK- und Produktionsfunktionen bereit. `genesis-chronicles` ist ein unabhängiger Consumer/Flagship-Titel und keine technische Voraussetzung für die Engine.
+Genesis Engine ist die **general-purpose Game-Development-Plattform** des A-TownChain-Ökosystems. Die Engine stellt wiederverwendbare Runtime-, Simulations-, Tooling- und SDK-Funktionen bereit. `genesis-chronicles` ist ein unabhängiger Consumer/Flagship-Titel und keine technische Voraussetzung für die Engine.
 
-Die kanonische Cargo-Workspace-Struktur umfasst Runtime-, Simulation-, Rendering-, AI-, Networking-, Editor-, Build- und SDK-Module. Zusätzlich ist die **Genesis Franchise Factory** als integrierter Produktionssubsystem-Bereich unter `franchise_factory/` Bestandteil dieses Repositories.
+Die kanonische Cargo-Workspace-Struktur besteht aus den folgenden Modulen:
 
-## Genesis Franchise Factory
+| Modul | Verantwortung |
+|---|---|
+| `atc-genesis-animation` | Animation und Animationslaufzeit |
+| `atc-genesis-assets` | Asset-Verträge, Ressourcen und Content-Pipeline-Basis |
+| `atc-genesis-audio` | Audio-Runtime und Audio-Abstraktionen |
+| `atc-genesis-ecs` | Entity Component System und World/ECS-Bridge |
+| `atc-genesis-physics` | Physik-Abstraktion und Simulation |
+| `atc-genesis-platform` | Gemeinsame Primitive und Backend-Interfaces |
+| `atc-genesis-renderer` | Rendering-Abstraktion |
+| `atc-genesis-ui` | UI-Abstraktionen |
+| `atc-genesis-sdk` | Öffentliche Engine-/SDK-Schnittstellen |
+| `atc-genesis-ai` | AI-Integration |
+| `atc-genesis-network` | Networking und Replikation |
+| `atc-genesis-build` | Build- und Packaging-Funktionen |
+| `atc-genesis-tools` | Entwickler- und Engine-Tools |
+| `atc-genesis-cli` | Kommandozeilenwerkzeuge |
+| `atc-genesis-editor` | Editor-Funktionen |
+| `atc-genesis-input` | Input-Abstraktionen |
+| `atc-genesis-world` | Welt- und Chunk-Simulation |
+| `atc-genesis-gameplay` | Generische Gameplay-Systeme |
+| `atc-genesis-runtime` | Runtime-Orchestrierung und Subsystem-Lifecycle |
 
-Die Franchise Factory ist jetzt im Genesis-Engine-Repository verankert und umfasst die vollständige Orchestrierungsbasis:
+Der **kanonische Runtime-Kern** ist damit `atc-genesis-runtime`. Ein Cargo-Paket `atc-genesis-engine` ist aktuell **kein Workspace-Mitglied**. Historische Dateien unter `modules/atc-genesis-engine/` dürfen nicht mit dem aktuellen Rust-Workspace verwechselt werden und müssen bei der weiteren Migration separat behandelt werden.
 
-- 17 AI-Produktions-Workflows
-- Franchise Core / AD-20 Pipeline
-- DAO-Modell / ATC-9900
-- Lifecycle Manager / AD-43
-- Typed Artifact + Provenance/Evidence Contracts
-- Game Factory Dependency Graph mit Build, QA und LiveOps
-- Python-Referenzimplementierung und integrierte Regressionstests
-- eigene Python-Quality-Gates in GitHub Actions
-
-```text
-franchise_factory/
-├── gff/
-│   ├── core.py
-│   ├── dao.py
-│   ├── lifecycle.py
-│   ├── spec_loader.py
-│   ├── workflows.py
-│   ├── artifacts.py
-│   └── game_factory.py
-├── tests/
-├── specs/
-└── docs/
-```
-
-Die Factory sitzt innerhalb der Engine-Plattform, ohne `genesis-chronicles` zur technischen Abhängigkeit zu machen. Provider, externe Side Effects und Chain-/VM-Anbindungen bleiben explizite Integrationsgrenzen und werden nicht als implementiert ausgegeben, solange keine Evidence vorliegt.
-
-Weitere Details: [`franchise_factory/README.md`](franchise_factory/README.md).
+Die Engine befindet sich im Rebuild und ist **nicht als Production-Ready oder finaler Releasezustand** zu verstehen.
 
 ## Purpose
 
@@ -78,7 +74,6 @@ Genesis Engine ist für die generische Laufzeit- und Simulationsinfrastruktur de
 - AI- und Networking-Integration
 - Editor- und Entwicklerwerkzeuge
 - SDK- und Build-/Packaging-Infrastruktur
-- Franchise- und Game-Production-Orchestrierung über die integrierte Franchise Factory
 
 Spielspezifische Logik gehört in das jeweilige Spiel-Repository. Generische Features werden nur über den vorgesehenen Feature-Promotion-Prozess in die Engine übernommen.
 
@@ -98,8 +93,31 @@ AI / Network / Renderer / UI
      Runtime
        ↓
  Editor / Tools / CLI / Build / SDK
-       ↓
- Franchise Factory / Production Orchestration
+```
+
+Die tatsächlichen Cargo-Abhängigkeiten sind maßgeblich; diese Darstellung ist ein Architekturmodell und ersetzt keine `Cargo.toml`-Definition.
+
+### Runtime data flow
+
+```text
+Input
+  ↓
+Fixed Simulation Tick
+  ├── ECS
+  ├── Gameplay
+  ├── Physics
+  ├── Animation
+  ├── AI
+  └── World / Streaming
+  ↓
+Authoritative State
+  ├── Network replication
+  ├── Audio
+  └── Render preparation
+          ↓
+       Renderer
+          ↓
+       Present
 ```
 
 ### Ecosystem Boundary
@@ -113,23 +131,31 @@ ATCLang / ATC-VM / A-TownChain
               │
               ▼
        Genesis Engine
-        ┌─────┴─────┐
-        │           │
- Franchise      Runtime/Editor
- Factory             │
-        │            ▼
-        └──────► Games / Franchises
+              │
+              ▼
+     Genesis Chronicles / Games
 ```
 
 Die Engine ist keine Blockchain, kein Kernel und kein Ersatz für ATC-VM oder ShivaCore. Chain-seitige Zustandsübergänge und Contracts bleiben an der vorgesehenen Chain-/VM-Grenze.
 
 ## Determinism
 
-Deterministische Simulation ist ein explizites Engine-Ziel. Für deterministische Pfade müssen ECS-Iteration, RNG/Seeds, Gameplay-State, Physik, Streaming, Netzwerk-Ticks, Serialisierung und Replay/State-Verification kontrolliert werden.
+Deterministische Simulation ist ein explizites Engine-Ziel. Für deterministische Pfade müssen insbesondere folgende Bereiche kontrolliert werden:
+
+- ECS-Iteration und Systemreihenfolge
+- RNG und Seeds
+- Gameplay-State
+- Physik
+- Welt-/Chunk-Streaming
+- Netzwerk-Ticks
+- Serialisierung
+- Replay-/State-Verification
+
+Ungeordnete Datenstrukturen dürfen auf einem deterministischen Simulationspfad nicht unkontrolliert die Ausführungsreihenfolge bestimmen.
 
 ## AI Boundary
 
-Externe oder asynchrone AI darf den deterministischen Simulationszustand nicht direkt verändern:
+Externe oder asynchrone AI darf den deterministischen Simulationszustand nicht direkt verändern. Der Zielpfad ist:
 
 ```text
 AI Inference
@@ -141,12 +167,10 @@ Deterministic Simulation
 State Change
 ```
 
-Die Franchise Factory folgt demselben Prinzip: Workflows sind provider-neutral; AI-Provider und externe Aktionen werden über injizierte Executor-Grenzen angeschlossen.
-
 ## Requirements
 
 - Rust >= 1.75 / Cargo
-- Python >= 3.11 für Franchise-Factory-Tooling und vorhandenes Tooling
+- Python >= 3.11 für vorhandenes Tooling und historische Sync-Skripte
 - Git >= 2.30
 
 ## Installation
@@ -155,9 +179,6 @@ Die Franchise Factory folgt demselben Prinzip: Workflows sind provider-neutral; 
 git clone https://github.com/A-TownChain-Okosystems/genesis-engine.git
 cd genesis-engine
 cargo build --workspace
-cd franchise_factory
-python -m pip install -e '.[dev]'
-pytest -q
 ```
 
 ## Testing
@@ -168,37 +189,138 @@ cargo check --workspace --all-targets
 cargo test --workspace --all-targets
 cargo clippy --workspace --all-targets -- -D warnings
 cargo doc --workspace --no-deps
-
-cd franchise_factory
-ruff check gff tests
-pytest -q
 ```
 
+Security-/Dependency-Prüfungen und Engine-spezifische Gates laufen zusätzlich über GitHub Actions.
+
 Testergebnisse sind Evidence. Ein erfolgreicher Testlauf bedeutet nicht automatisch `AUDITED` oder `PRODUCTION_READY`.
+
+## Development
+
+Entwicklung erfolgt nach den geltenden A-TownChain-Governance- und Repository-Standards. Commits müssen dem Conventional-Commit-Modell entsprechen.
+
+Vor größeren Änderungen sind mindestens `STATUS.md`, `AGENT_MANIFEST.md`, `ARCHITECTURE.md`, `ROADMAP.md` und die relevanten Governance-Dokumente zu prüfen.
+
+## Security
+
+Security Issues dürfen nicht öffentlich über GitHub Issues gemeldet werden. Sicherheitslücken sind über den offiziellen Security-Reporting-Prozess in `SECURITY.md` zu melden.
+
+**Security class:** S1  
+**Criticality:** low
+
+## Audit
+
+Der laufende Engineering-Audit wird in folgenden Dateien dokumentiert:
+
+- `docs/ENGINEERING_AUDIT.md` — Audit-Baseline und Evidenzstatus
+- `docs/ENGINEERING_AUDIT_FINDINGS.md` — Finding Registry und Remediation-Status
+
+Definition of Done für Findings:
+
+```text
+Finding
+  → Root Cause
+  → Fix
+  → Regression Test
+  → CI Verification
+  → Audit Evidence
+  → CLOSED
+```
 
 ## Documentation
 
 - `ARCHITECTURE.md` — technische Architektur
 - `STATUS.md` — aktueller Projektstatus
 - `ROADMAP.md` — Entwicklungs-Roadmap
-- `franchise_factory/README.md` — integrierte Franchise Factory
-- `franchise_factory/gff/` — Factory Runtime/Orchestration
 - `docs/ENGINEERING_AUDIT.md` — Audit-Baseline
 - `docs/ENGINEERING_AUDIT_FINDINGS.md` — Findings
+- `docs/specs/GEN-PROD-001-PRODUCT-STRATEGY.md` — Produktstrategie
+- `docs/REPOSITORY_STANDARD.md` — Repository-Standard
+- `a-townchain-os-docs` — zentrale Ökosystem-Dokumentation
 
 ## Governance
 
-Das Repository folgt dem A-TownChain-Governance-Modell und den geltenden ATC-Standards. Änderungen an Factory-, Engine-, Chain- oder VM-Grenzen müssen nachvollziehbar dokumentiert und durch Tests/Evidence belegt werden.
+Das Repository folgt dem A-TownChain-Governance-Modell. Architektur- und Governance-Entscheidungen müssen über die vorgesehenen Entscheidungs- und Review-Prozesse erfolgen.
+
+Canonical Standard-IDs werden ausschließlich über die Standards Registry und den dafür definierten Governance-Prozess vergeben. Die aktuelle Taxonomie verwendet Family-scoped IDs der Form `ATC-STD-Fxx-yyy`; bestehende Legacy-IDs bleiben historisch erhalten und werden nicht stillschweigend umnummeriert.
+
+## Standards & Compliance
+
+| Standard | Version | Verwendung |
+|---|---:|---|
+| ATC-STD-000 | 1.3.0 | Governance Root |
+| ATC-STD-README-001 | 1.0.0 | README-Struktur und Metadaten |
+| ATC-STD-MD-001 | 1.0.0 | Markdown-Konformität |
+| ATC-STD-201 | 1.0.1 | Repository Governance |
+| ATC-STD-202 | 1.2.0 | Repository/Entwicklungsanforderungen |
+| ATC-STD-203 | 1.0.1 | Security und Release Gates |
+
+Die Tabelle dokumentiert relevante Standards; sie ist keine pauschale Behauptung, dass dieses Entwicklungs-Repository bereits `PRODUCTION_READY` ist.
+
+## Roadmap
+
+Siehe:
+
+- `ROADMAP.md`
+- `STATUS.md`
+- zentrale Roadmap in `a-townchain-os-docs`
+- GitHub Issues & Projects
+
+## Contributing
+
+Beiträge erfolgen über den definierten ATC-Governance-Prozess. Vor einem Merge müssen die für die Änderung relevanten Tests und Validatoren erfolgreich ausgeführt werden.
 
 ## License
 
 Apache-2.0 — A-TownChain-Okosystems. Details siehe [`LICENSE`](LICENSE).
 
+## Maintainers
+
+**Organization:** A-TownChain-Okosystems  
+**Maintainers:** ShivaCoreDev, aurora-superagent
+
+## Repository Metadata
+
+Maschinenlesbar: siehe HTML-Metadaten-Block im Header gemäß ATC-STD-README-001 §14.  
+**Registry-ID:** `ATC-REPO-GAME-001`
+
 ## AI Agent Instructions
+
+Für KI-Agenten:
 
 1. Lies `STATUS.md`, `AGENT_MANIFEST.md`, `ARCHITECTURE.md` und `ROADMAP.md` vor größeren Änderungen.
 2. Beachte die geltenden ATC-Standards und Repository-Governance.
 3. Verwende Conventional Commits.
-4. Führe Engine- und Franchise-Factory-Tests aus.
+4. Führe nach Änderungen mindestens `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo test --workspace --all-targets` und `cargo clippy --workspace --all-targets -- -D warnings` aus.
 5. Trenne deklarierte Zustände, Testergebnisse und Governance-Evidence strikt voneinander.
 6. Verändere keine Chain-/VM-Grenzen, um Engine-Funktionalität zu implementieren.
+
+## Scope
+
+In-Scope: Runtime-Kern (`atc-genesis-runtime`), Engine-Subsysteme, Plattform-SDK
+und die Franchise Factory (`components/gff`) als Content-Pipeline-Ebene UEBER der
+Engine. Out-of-Scope: Genesis Chronicles als Flagship-Titel (separates Projekt,
+keine Engine-Abhaengigkeit in diese Richtung), Konsens-/L1-Logik (A-TownChain).
+
+## Features
+
+- ECS-basierte Runtime mit Query-Komposition und System-Access-Contracts
+- Deterministische Simulation (Determinism-Gate, Code-Token-Scan + Allowlist)
+- Franchise Factory: 23 kanonische Factory-Specs (AD-20..43), Workflow-Engine,
+  Game-Factory-Artefakt-Graph, ATC-9900 DAO- und Lifecycle-Verwaltung
+- AI Boundary: keine generativen Anteile im Konsens-/Kernel-Pfad
+
+## Version
+
+Versionierung nach ATC-STD-201/202 (Registry-SSOT `atc-standards`); Releases
+erfolgen ueber NET-004-Promotion, aktuelle Version siehe CHANGELOG.md.
+
+## Komponenten
+
+- **`components/gff`** — Genesis Franchise Factory (GFF): vollstaendige Ueberfuehrung des
+  Quellrepos `genesis-franchise-factory` per `git subtree` (volle Historie, Stand der
+  Feature-Branches inklusive AI-Workflow-Katalog). Referenzimplementierung `gff/`
+  (Core/DAO/Lifecycle/Workflows/GameFactory), 23 kanonische Factory-Specs `specs/*.atc`
+  (AD-20..AD-43), 47 pytest-Tests, eigene Quality Gates (ruff+pytest, Job `gff-pytest`).
+  Plattform-Trennungsregel bleibt verbindlich: GFF sitzt UEBER der Engine, keinerlei
+  Genesis-Chronicles-Abhaengigkeit. Determinism-Allowlist: `determinism_allowlist.yaml`.
