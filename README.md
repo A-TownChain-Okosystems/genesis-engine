@@ -294,3 +294,13 @@ Für KI-Agenten:
 4. Führe nach Änderungen mindestens `cargo fmt --all -- --check`, `cargo check --workspace --all-targets`, `cargo test --workspace --all-targets` und `cargo clippy --workspace --all-targets -- -D warnings` aus.
 5. Trenne deklarierte Zustände, Testergebnisse und Governance-Evidence strikt voneinander.
 6. Verändere keine Chain-/VM-Grenzen, um Engine-Funktionalität zu implementieren.
+
+## Komponenten
+
+- **`components/gff`** — Genesis Franchise Factory (GFF): vollstaendige Ueberfuehrung des
+  Quellrepos `genesis-franchise-factory` per `git subtree` (volle Historie, Stand der
+  Feature-Branches inklusive AI-Workflow-Katalog). Referenzimplementierung `gff/`
+  (Core/DAO/Lifecycle/Workflows/GameFactory), 23 kanonische Factory-Specs `specs/*.atc`
+  (AD-20..AD-43), 42 pytest-Tests, eigene Quality Gates (ruff+pytest, Job `gff-pytest`).
+  Plattform-Trennungsregel bleibt verbindlich: GFF sitzt UEBER der Engine, keinerlei
+  Genesis-Chronicles-Abhaengigkeit. Determinism-Allowlist: `determinism_allowlist.yaml`.

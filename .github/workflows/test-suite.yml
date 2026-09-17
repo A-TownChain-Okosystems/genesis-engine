@@ -63,8 +63,20 @@ jobs:
             (cd "$d" && pip install -q -r requirements.txt pytest && python -m pytest -q --no-header) || { echo "pytest FAILED in $d"; FAIL=1; }
           done < <(find . -name requirements.txt -not -path "*/archive/*")
           exit $FAIL
+  gff-pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: {python-version: "3.11"}
+      - name: GFF Quality Gates (ruff + pytest, SCR-0078, scoped components/gff)
+        run: |
+          pip install -q ruff pytest
+          cd components/gff
+          ruff check .
+          python3 -m pytest -q --no-header
   evidence:
-    needs: [rust-workspace, npm-tests, pytest]
+    needs: [rust-workspace, npm-tests, pytest, gff-pytest]
     if: success()
     runs-on: ubuntu-latest
     steps:
