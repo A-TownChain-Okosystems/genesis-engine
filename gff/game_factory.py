@@ -25,7 +25,7 @@ GAME_FACTORY_GRAPH: tuple[GameFactoryNode, ...] = (
     GameFactoryNode("combat", ArtifactKind.COMBAT, (ArtifactKind.GAME_BIBLE, ArtifactKind.CHARACTER, ArtifactKind.CREATURE)),
     GameFactoryNode("quest", ArtifactKind.QUEST, (ArtifactKind.WORLD_BIBLE, ArtifactKind.LORE, ArtifactKind.CHARACTER)),
     GameFactoryNode("level", ArtifactKind.LEVEL, (ArtifactKind.WORLD_BIBLE, ArtifactKind.QUEST, ArtifactKind.CREATURE)),
-    GameFactoryNode("item", ArtifactKind.ITEM, (ArtifactKind.GAME_BIBLE, ArtifactKind.ECONOMY)),
+    GameFactoryNode("item", ArtifactKind.ITEM, (ArtifactKind.GAME_BIBLE,)),
     GameFactoryNode("weapon", ArtifactKind.WEAPON, (ArtifactKind.CHARACTER, ArtifactKind.COMBAT)),
     GameFactoryNode("animation", ArtifactKind.ANIMATION, (ArtifactKind.CHARACTER, ArtifactKind.CREATURE, ArtifactKind.WEAPON)),
     GameFactoryNode("audio", ArtifactKind.AUDIO, (ArtifactKind.GAME_BIBLE, ArtifactKind.WEAPON)),
@@ -33,6 +33,7 @@ GAME_FACTORY_GRAPH: tuple[GameFactoryNode, ...] = (
     GameFactoryNode("ai-npc", ArtifactKind.NPC_AI, (ArtifactKind.CHARACTER, ArtifactKind.LORE)),
     GameFactoryNode("economy", ArtifactKind.ECONOMY, (ArtifactKind.GAME_BIBLE, ArtifactKind.ITEM)),
     GameFactoryNode("multiplayer", ArtifactKind.MULTIPLAYER, (ArtifactKind.GAME_BIBLE, ArtifactKind.COMBAT, ArtifactKind.ECONOMY)),
+    GameFactoryNode("build", ArtifactKind.BUILD, (ArtifactKind.GAME_BIBLE, ArtifactKind.WORLD_BIBLE, ArtifactKind.CHARACTER, ArtifactKind.QUEST, ArtifactKind.LEVEL, ArtifactKind.ITEM, ArtifactKind.WEAPON, ArtifactKind.ANIMATION, ArtifactKind.AUDIO, ArtifactKind.VFX, ArtifactKind.NPC_AI, ArtifactKind.MULTIPLAYER)),
     GameFactoryNode("testing", ArtifactKind.QA_REPORT, (ArtifactKind.BUILD, ArtifactKind.COMBAT, ArtifactKind.ECONOMY)),
     GameFactoryNode("liveops", ArtifactKind.LIVEOPS_PLAN, (ArtifactKind.QA_REPORT, ArtifactKind.MULTIPLAYER, ArtifactKind.ECONOMY)),
 )
