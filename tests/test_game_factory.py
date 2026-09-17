@@ -1,6 +1,12 @@
 import pytest
 
-from gff.artifacts import ArtifactEnvelope, ArtifactKind, ArtifactRef, ArtifactContractError, validate_artifact
+from gff.artifacts import (
+    ArtifactContractError,
+    ArtifactEnvelope,
+    ArtifactKind,
+    ArtifactRef,
+    validate_artifact,
+)
 from gff.game_factory import (
     GAME_FACTORY_GRAPH,
     GameFactoryGraphError,
