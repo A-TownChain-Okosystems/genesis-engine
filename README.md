@@ -2,53 +2,95 @@
 
 Repository identifier: `genesis-franchise-factory`
 
-**[L6] Content-Pipeline-Orchestrator des Genesis-Ökosystems** — erstes eigenständiges Repo der Franchise Factory (AD-20–AD-43), gebaut am 13.09.2026 aus den kanonischen Specs im Org-Archiv (`a-townchain-os-docs/docs/archive/monorepo-full/src/modules/atc-franchise`).
+**Content-Pipeline-Orchestrator des Genesis-Ökosystems** — erstes eigenständiges Repo der Franchise Factory (AD-20–AD-43).
 
 > **Plattform-Regel (verbindlich):** GFF sitzt **über** der Genesis Engine (GCL v2.0) und ist strikte Plattform — **keinerlei Abhängigkeit zu Genesis Chronicles**. Das Spec-Gate (CI) erzwingt dies maschinell.
 
-## Architektur
+## Architecture
 
+```text
+Input / Auftrag / Daten
+        ↓
+Analyse → Planung → Produktion → Quality Gate
+        ↓
+Integration → Publishing → Monitoring → Optimierung
+        ↓
+Franchise-Replikation
 ```
-specs/*.atc          23 Factory-Specs (AD-21..43) + GFF Core (AD-20)
-                     + ATC-9900 DAO-Kern (factory.atc, routes.atc)
-                     + Contracts (registry.atc, revenue.atc)
+
+`gff/workflows.py` implements the provider-neutral AI workflow registry and execution contract. The engine receives an injected executor, so model providers, credentials and external side effects stay outside the deterministic workflow core.
+
+Existing modules remain the canonical implementation for the AD-20 pipeline, DAO model and lifecycle. The new workflow catalogue provides the higher-level production taxonomy requested for the Franchise Factory.
+
+## AI Factory Workflow Catalogue
+
+The implemented catalogue contains 17 production workflows:
+
+1. Text / Content Factory
+2. Software Factory
+3. Game Factory
+4. Marketing Factory
+5. Business Factory
+6. Document Factory
+7. Research Factory
+8. E-Commerce Factory
+9. Customer-Service Factory
+10. Automation Factory
+11. Knowledge Factory
+12. Agent Factory
+13. Franchise Factory
+14. Startup Factory
+15. Education Factory
+16. Book Factory
+17. Virtual World Factory
+
+Every workflow has the controlled lifecycle `INPUT → ANALYZE → PLAN → PRODUCE → QUALITY → INTEGRATE → PUBLISH → MONITOR → OPTIMIZE`.
+
+## Game Factory
+
+The Game Factory is expanded into a dedicated production system with 18 domains:
+
+`Concept · World · Lore · Character · Creature · Combat · Quest · Level · Item · Weapon · Animation · AI NPC · Audio · VFX · Economy · Multiplayer · Testing · LiveOps`
+
+The catalogue covers the complete target pipeline:
+
+`Game Idea → Game Bible → World → Lore → Characters → Creatures → Combat → Quests → Levels → Items → Economy → Assets → Animation → Audio → Code → QA → AI Playtest → Build → Release → LiveOps`
+
+See [`docs/AI_FACTORY_WORKFLOWS.md`](docs/AI_FACTORY_WORKFLOWS.md) for the complete capability matrix.
+
+## Repository layout
+
+```text
+specs/                 Canonical .atc factory specifications
 gff/
-  core.py            Pipeline-Orchestrator (AD-20): Franchise-Registry,
-                     10-stufige Default-Pipeline, injizierbarer Executor,
-                     ehrlicher Dry-Run (keine Fake-Outputs)
-  dao.py             ATC-9900 DAO-Modell: Franchise-DAOs mit Token, Vault,
-                     Royalty-Tiers (Bronze 5 %…Platinum 2 %), Governance
-  lifecycle.py       12-Phasen-Lifecycle (AD-43): Idea→…→Archived,
-                     Milestones, Health/KPI
-  spec_loader.py     Deskriptor-Parser für .atc-Specs (KEIN ATCLang-
-                     Compiler — der lebt in atclang, L0)
+  core.py              AD-20 pipeline orchestrator
+a  dao.py              ATC-9900 DAO model
+  lifecycle.py         AD-43 lifecycle manager
+  spec_loader.py       .atc descriptor parser
+  workflows.py         AI workflow registry + execution engine
+tests/
+  test_workflows.py    Workflow catalogue and execution tests
 tools/
-  validate_specs.py  CI-Spec-Gate: 23 Factories vollständig, AD-Mapping,
-                     Copyright-Header, Plattform-Trennung
-tests/               33 pytest-Tests (alle Module + Gate)
+  validate_specs.py    CI specification gate
+docs/
+  AI_FACTORY_WORKFLOWS.md
 ```
-
-## Factories (23 + 2 Cores)
-
-**v1.0 (AD-20–31):** GFF Core · IP · World · Character · Lore · Quest · Economy · LiveOps · AI Content · Merchandise · Community · Analytics
-
-**v2.0 (AD-32–43):** Blueprint · Canon Engine · Asset Intelligence · Gameplay · Narrative · Multiplayer · Creator · Publishing · Commerce · AI Director · Security · Lifecycle Manager
 
 ## Quickstart
 
 ```bash
 pip install -e ".[dev]"
-python tools/validate_specs.py   # Spec-Gate
-pytest -q                        # 33 Tests
+python tools/validate_specs.py
+pytest -q
 ruff check gff tests tools
 ```
 
 ## Status: EXPERIMENTAL (R1)
 
-- Kanonische Specs: **unverändert** aus dem Archiv übernommen (Copyright-Header original)
-- Referenz-Implementierung: Core/DAO/Lifecycle mit Tests — **implementiert, nicht auditiert**
-- Offen: GCL-Bus-Integration, ATC-VM-Bindung (AD-20-Specs nutzen `Chain::timestamp()`), Store-/Publishing-Anbindung
-- Evidence: `.atc/evidence/evidence.yaml` (SCR-0080-Ehrlichkeit: partial, TESTED lokal)
+- Canonical specs remain unchanged.
+- Workflow registry and execution contract: **implemented and unit-tested**.
+- AI provider adapters, GCL bus integration, ATC-VM binding, persistent store/publishing adapters and production game-engine integration: **not implemented unless backed by evidence**.
+- No fake AI outputs are generated by the core workflow engine.
 
 ## Governance
 
