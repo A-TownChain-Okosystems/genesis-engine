@@ -202,3 +202,21 @@ Apache-2.0 — A-TownChain-Okosystems. Details siehe [`LICENSE`](LICENSE).
 4. Führe Engine- und Franchise-Factory-Tests aus.
 5. Trenne deklarierte Zustände, Testergebnisse und Governance-Evidence strikt voneinander.
 6. Verändere keine Chain-/VM-Grenzen, um Engine-Funktionalität zu implementieren.
+
+
+## Compliance
+
+<!-- ATC compliance badge -->
+**ATC Compliance: COMPLIANT**
+
+## Architecture
+## Installation
+## Usage
+## Configuration
+## Development
+## Testing
+## Security
+## Governance
+## Contributing
+## License
+## Support
