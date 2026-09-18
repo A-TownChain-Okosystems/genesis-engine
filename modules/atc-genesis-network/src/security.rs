@@ -21,7 +21,7 @@ pub enum PacketRejectReason {
     StaleTick,
     EntityMismatch,
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ValidatedPacket {
     pub peer: PeerId,
     pub session: SessionId,
