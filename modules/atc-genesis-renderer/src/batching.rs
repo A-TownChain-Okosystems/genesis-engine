@@ -30,7 +30,7 @@ pub fn build_batches(items: &[RenderItem]) -> Vec<RenderBatch> {
             b.entity,
         ))
     });
-    let mut batches = Vec::new();
+    let mut batches: Vec<RenderBatch> = Vec::new();
     for item in sorted {
         match batches.last_mut() {
             Some(batch)
