@@ -590,16 +590,19 @@ impl World {
             return false;
         }
         let type_id = TypeId::of::<T>();
-        let table = self.component_table::<T>();
-        let replaced = table.values.insert(id, component).is_some();
+        let replaced = {
+            let table = self.component_table::<T>();
+            let replaced = table.values.insert(id, component).is_some();
+            if !replaced { table.added.insert(id); }
+            table.changed.insert(id);
+            replaced
+        };
         if !replaced {
-            table.added.insert(id);
             self.lifecycle.emit(LifecycleEvent::ComponentInserted {
                 entity: id,
                 component: type_id,
             });
         }
-        table.changed.insert(id);
         replaced
     }
 
@@ -627,12 +630,17 @@ impl World {
 
     pub fn remove_component<T: Any + Send + Sync>(&mut self, id: EntityId) -> Option<T> {
         let type_id = TypeId::of::<T>();
-        let table = self.components.get_mut(&type_id)?;
-        let table = table.as_any_mut().downcast_mut::<TypedComponentTable<T>>()?;
-        let removed = table.values.remove(&id);
+        let removed = {
+            let table = self.components.get_mut(&type_id)?;
+            let table = table.as_any_mut().downcast_mut::<TypedComponentTable<T>>()?;
+            let removed = table.values.remove(&id);
+            if removed.is_some() {
+                table.added.remove(&id);
+                table.changed.remove(&id);
+            }
+            removed
+        };
         if removed.is_some() {
-            table.added.remove(&id);
-            table.changed.remove(&id);
             self.lifecycle.emit(LifecycleEvent::ComponentRemoved {
                 entity: id,
                 component: type_id,
