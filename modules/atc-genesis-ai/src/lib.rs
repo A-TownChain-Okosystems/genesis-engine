@@ -59,7 +59,11 @@ impl AiAgent {
                     } else {
                         self.speed
                     };
-                    [direction[0] / n * s, direction[1] / n * s, direction[2] / n * s]
+                    [
+                        direction[0] / n * s,
+                        direction[1] / n * s,
+                        direction[2] / n * s,
+                    ]
                 } else {
                     [0.0; 3]
                 }
@@ -93,7 +97,11 @@ impl GridNav {
 
     pub fn set_blocked(&mut self, x: u32, y: u32, blocked: bool) {
         if let Some(c) = self.cells.get_mut((y * self.width + x) as usize) {
-            *c = if blocked { NavCell::Blocked } else { NavCell::Walkable };
+            *c = if blocked {
+                NavCell::Blocked
+            } else {
+                NavCell::Walkable
+            };
         }
     }
 
@@ -120,11 +128,7 @@ impl GridNav {
         n
     }
 
-    pub fn shortest_path(
-        &self,
-        start: (u32, u32),
-        goal: (u32, u32),
-    ) -> Option<Vec<(u32, u32)>> {
+    pub fn shortest_path(&self, start: (u32, u32), goal: (u32, u32)) -> Option<Vec<(u32, u32)>> {
         if !self.walkable(start.0, start.1) || !self.walkable(goal.0, goal.1) {
             return None;
         }

@@ -22,8 +22,13 @@ pub struct RenderBatch {
 pub fn build_batches(items: &[RenderItem]) -> Vec<RenderBatch> {
     let mut sorted = items.to_vec();
     sorted.sort_by(|a, b| {
-        (a.mesh, a.material, a.texture, a.instance_group, a.entity)
-            .cmp(&(b.mesh, b.material, b.texture, b.instance_group, b.entity))
+        (a.mesh, a.material, a.texture, a.instance_group, a.entity).cmp(&(
+            b.mesh,
+            b.material,
+            b.texture,
+            b.instance_group,
+            b.entity,
+        ))
     });
     let mut batches = Vec::new();
     for item in sorted {
@@ -51,13 +56,36 @@ pub fn build_batches(items: &[RenderItem]) -> Vec<RenderBatch> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn id(v: u128) -> AssetId { AssetId(v) }
+    fn id(v: u128) -> AssetId {
+        AssetId(v)
+    }
     #[test]
     fn batches_share_full_pipeline_key() {
         let items = vec![
-            RenderItem { entity: EntityId(2), transform: Transform::default(), mesh: id(1), material: id(2), texture: None, instance_group: Some(7) },
-            RenderItem { entity: EntityId(1), transform: Transform::default(), mesh: id(1), material: id(2), texture: None, instance_group: Some(7) },
-            RenderItem { entity: EntityId(3), transform: Transform::default(), mesh: id(1), material: id(2), texture: None, instance_group: Some(8) },
+            RenderItem {
+                entity: EntityId(2),
+                transform: Transform::default(),
+                mesh: id(1),
+                material: id(2),
+                texture: None,
+                instance_group: Some(7),
+            },
+            RenderItem {
+                entity: EntityId(1),
+                transform: Transform::default(),
+                mesh: id(1),
+                material: id(2),
+                texture: None,
+                instance_group: Some(7),
+            },
+            RenderItem {
+                entity: EntityId(3),
+                transform: Transform::default(),
+                mesh: id(1),
+                material: id(2),
+                texture: None,
+                instance_group: Some(8),
+            },
         ];
         let batches = build_batches(&items);
         assert_eq!(batches.len(), 2);

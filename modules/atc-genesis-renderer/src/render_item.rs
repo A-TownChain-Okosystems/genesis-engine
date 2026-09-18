@@ -7,7 +7,9 @@ use crate::resources::RenderResourceBindings;
 pub fn collect_render_items(world: &World, resources: &RenderResourceBindings) -> Vec<RenderItem> {
     let mut items = Vec::new();
     for (entity, transform) in world.query_world_transforms() {
-        let Some(binding) = resources.binding(entity) else { continue };
+        let Some(binding) = resources.binding(entity) else {
+            continue;
+        };
         items.push(RenderItem {
             entity,
             transform,
@@ -21,7 +23,11 @@ pub fn collect_render_items(world: &World, resources: &RenderResourceBindings) -
     items
 }
 
-pub fn collect_entity(world: &World, resources: &RenderResourceBindings, entity: EntityId) -> Option<RenderItem> {
+pub fn collect_entity(
+    world: &World,
+    resources: &RenderResourceBindings,
+    entity: EntityId,
+) -> Option<RenderItem> {
     let transform = world.world_transform(entity)?;
     let binding = resources.binding(entity)?;
     Some(RenderItem {
@@ -37,8 +43,8 @@ pub fn collect_entity(world: &World, resources: &RenderResourceBindings, entity:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use atc_genesis_platform::{AssetId, Transform};
     use crate::resources::{MaterialHandle, MeshHandle, MeshMaterialBinding};
+    use atc_genesis_platform::{AssetId, Transform};
 
     #[test]
     fn collect_requires_mesh_material_binding() {
@@ -46,7 +52,13 @@ mod tests {
         let entity = world.spawn(Transform::default());
         let mut resources = RenderResourceBindings::default();
         assert!(collect_entity(&world, &resources, entity).is_none());
-        resources.bind(entity, MeshMaterialBinding { mesh: MeshHandle(AssetId(1)), material: MaterialHandle(AssetId(2)) });
+        resources.bind(
+            entity,
+            MeshMaterialBinding {
+                mesh: MeshHandle(AssetId(1)),
+                material: MaterialHandle(AssetId(2)),
+            },
+        );
         assert!(collect_entity(&world, &resources, entity).is_some());
     }
 }

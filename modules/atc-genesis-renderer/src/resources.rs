@@ -25,7 +25,10 @@ impl RenderResourceBindings {
         self.bindings.insert(entity, binding);
     }
 
-    pub fn unbind(&mut self, entity: atc_genesis_platform::EntityId) -> Option<MeshMaterialBinding> {
+    pub fn unbind(
+        &mut self,
+        entity: atc_genesis_platform::EntityId,
+    ) -> Option<MeshMaterialBinding> {
         self.bindings.remove(&entity)
     }
 
@@ -34,7 +37,11 @@ impl RenderResourceBindings {
     }
 
     pub fn iter_sorted(&self) -> Vec<(atc_genesis_platform::EntityId, MeshMaterialBinding)> {
-        let mut items: Vec<_> = self.bindings.iter().map(|(id, binding)| (*id, *binding)).collect();
+        let mut items: Vec<_> = self
+            .bindings
+            .iter()
+            .map(|(id, binding)| (*id, *binding))
+            .collect();
         items.sort_by_key(|(id, _)| id.0);
         items
     }

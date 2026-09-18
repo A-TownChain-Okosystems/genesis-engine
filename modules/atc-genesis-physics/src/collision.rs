@@ -1,7 +1,10 @@
 use atc_genesis_platform::EntityId;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Aabb { pub min: [f32; 3], pub max: [f32; 3] }
+pub struct Aabb {
+    pub min: [f32; 3],
+    pub max: [f32; 3],
+}
 
 impl Aabb {
     pub fn contains(&self, p: [f32; 3]) -> bool {
@@ -76,10 +79,15 @@ impl Aabb {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Collider { pub entity: EntityId, pub bounds: Aabb }
+pub struct Collider {
+    pub entity: EntityId,
+    pub bounds: Aabb,
+}
 
 #[derive(Default)]
-pub struct CollisionWorld { colliders: Vec<Collider> }
+pub struct CollisionWorld {
+    colliders: Vec<Collider>,
+}
 
 impl CollisionWorld {
     pub fn add(&mut self, collider: Collider) {
@@ -107,7 +115,11 @@ impl CollisionWorld {
     pub fn resolve_point(&self, point: [f32; 3]) -> Option<(EntityId, [f32; 3], f32)> {
         self.colliders
             .iter()
-            .filter_map(|c| c.bounds.point_resolution(point).map(|(n, d)| (c.entity, n, d)))
+            .filter_map(|c| {
+                c.bounds
+                    .point_resolution(point)
+                    .map(|(n, d)| (c.entity, n, d))
+            })
             .min_by(|a, b| {
                 a.2.partial_cmp(&b.2)
                     .unwrap_or(std::cmp::Ordering::Equal)
@@ -123,7 +135,11 @@ impl CollisionWorld {
     ) -> Option<EntityId> {
         self.colliders
             .iter()
-            .filter_map(|c| c.bounds.ray_intersection(origin, direction, max_distance).map(|t| (t, c.entity)))
+            .filter_map(|c| {
+                c.bounds
+                    .ray_intersection(origin, direction, max_distance)
+                    .map(|t| (t, c.entity))
+            })
             .min_by(|a, b| {
                 a.0.partial_cmp(&b.0)
                     .unwrap_or(std::cmp::Ordering::Equal)
@@ -132,8 +148,12 @@ impl CollisionWorld {
             .map(|(_, id)| id)
     }
 
-    pub fn clear(&mut self) { self.colliders.clear(); }
-    pub fn len(&self) -> usize { self.colliders.len() }
+    pub fn clear(&mut self) {
+        self.colliders.clear();
+    }
+    pub fn len(&self) -> usize {
+        self.colliders.len()
+    }
 }
 
 #[cfg(test)]
@@ -143,23 +163,53 @@ mod tests {
     #[test]
     fn raycast_returns_nearest() {
         let mut w = CollisionWorld::default();
-        w.add(Collider { entity: EntityId(2), bounds: Aabb { min: [5.0, -1.0, -1.0], max: [6.0, 1.0, 1.0] } });
-        w.add(Collider { entity: EntityId(1), bounds: Aabb { min: [2.0, -1.0, -1.0], max: [3.0, 1.0, 1.0] } });
-        assert_eq!(w.raycast([0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 10.0), Some(EntityId(1)));
+        w.add(Collider {
+            entity: EntityId(2),
+            bounds: Aabb {
+                min: [5.0, -1.0, -1.0],
+                max: [6.0, 1.0, 1.0],
+            },
+        });
+        w.add(Collider {
+            entity: EntityId(1),
+            bounds: Aabb {
+                min: [2.0, -1.0, -1.0],
+                max: [3.0, 1.0, 1.0],
+            },
+        });
+        assert_eq!(
+            w.raycast([0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 10.0),
+            Some(EntityId(1))
+        );
     }
 
     #[test]
     fn point_resolution_uses_nearest_face() {
-        let aabb = Aabb { min: [-1.0; 3], max: [1.0; 3] };
-        assert_eq!(aabb.point_resolution([0.9, 0.0, 0.0]), Some(([1.0, 0.0, 0.0], 0.1)));
+        let aabb = Aabb {
+            min: [-1.0; 3],
+            max: [1.0; 3],
+        };
+        assert_eq!(
+            aabb.point_resolution([0.9, 0.0, 0.0]),
+            Some(([1.0, 0.0, 0.0], 0.1))
+        );
     }
 
     #[test]
     fn resolution_is_entity_deterministic() {
         let mut w = CollisionWorld::default();
-        let bounds = Aabb { min: [-1.0; 3], max: [1.0; 3] };
-        w.add(Collider { entity: EntityId(2), bounds });
-        w.add(Collider { entity: EntityId(1), bounds });
+        let bounds = Aabb {
+            min: [-1.0; 3],
+            max: [1.0; 3],
+        };
+        w.add(Collider {
+            entity: EntityId(2),
+            bounds,
+        });
+        w.add(Collider {
+            entity: EntityId(1),
+            bounds,
+        });
         assert_eq!(w.resolve_point([0.0; 3]).unwrap().0, EntityId(1));
     }
 }

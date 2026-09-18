@@ -381,10 +381,7 @@ impl SystemSchedule {
         let mut batches: Vec<Vec<SystemId>> = Vec::new();
 
         for id in order {
-            let descriptor = self
-                .systems
-                .get(&id)
-                .expect("scheduled system invariant");
+            let descriptor = self.systems.get(&id).expect("scheduled system invariant");
             let mut placed = false;
 
             for batch in &mut batches {
@@ -436,11 +433,7 @@ impl SystemExecutor {
         Self::default()
     }
 
-    pub fn register<F>(
-        &mut self,
-        descriptor: SystemDescriptor,
-        run: F,
-    ) -> Result<(), ScheduleError>
+    pub fn register<F>(&mut self, descriptor: SystemDescriptor, run: F) -> Result<(), ScheduleError>
     where
         F: FnMut(&mut World) + Send + 'static,
     {
@@ -572,7 +565,9 @@ impl World {
         let inserted = {
             let table = self.component_table::<T>();
             let inserted = table.values.insert(id, component).is_none();
-            if inserted { table.added.insert(id); }
+            if inserted {
+                table.added.insert(id);
+            }
             table.changed.insert(id);
             inserted
         };
@@ -593,7 +588,9 @@ impl World {
         let replaced = {
             let table = self.component_table::<T>();
             let replaced = table.values.insert(id, component).is_some();
-            if !replaced { table.added.insert(id); }
+            if !replaced {
+                table.added.insert(id);
+            }
             table.changed.insert(id);
             replaced
         };
@@ -632,7 +629,9 @@ impl World {
         let type_id = TypeId::of::<T>();
         let removed = {
             let table = self.components.get_mut(&type_id)?;
-            let table = table.as_any_mut().downcast_mut::<TypedComponentTable<T>>()?;
+            let table = table
+                .as_any_mut()
+                .downcast_mut::<TypedComponentTable<T>>()?;
             let removed = table.values.remove(&id);
             if removed.is_some() {
                 table.added.remove(&id);
@@ -773,18 +772,10 @@ impl World {
             .collect()
     }
 
-    pub fn query2<A: Any + Send + Sync, B: Any + Send + Sync>(
-        &self,
-    ) -> Vec<(EntityId, &A, &B)> {
+    pub fn query2<A: Any + Send + Sync, B: Any + Send + Sync>(&self) -> Vec<(EntityId, &A, &B)> {
         self.entities()
             .into_iter()
-            .filter_map(|id| {
-                Some((
-                    id,
-                    self.component::<A>(id)?,
-                    self.component::<B>(id)?,
-                ))
-            })
+            .filter_map(|id| Some((id, self.component::<A>(id)?, self.component::<B>(id)?)))
             .collect()
     }
 
@@ -1101,15 +1092,11 @@ mod tests {
         let mut schedule = SystemSchedule::new();
         schedule
             .register(
-                SystemDescriptor::new(SystemId(2), "read-position")
-                    .read_component::<Position>(),
+                SystemDescriptor::new(SystemId(2), "read-position").read_component::<Position>(),
             )
             .unwrap();
         schedule
-            .register(
-                SystemDescriptor::new(SystemId(1), "read-health")
-                    .read_component::<Health>(),
-            )
+            .register(SystemDescriptor::new(SystemId(1), "read-health").read_component::<Health>())
             .unwrap();
         schedule
             .register(

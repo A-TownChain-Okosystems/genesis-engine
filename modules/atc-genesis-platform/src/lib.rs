@@ -50,7 +50,8 @@ pub trait AssetStore {
 
 pub trait PhysicsWorld {
     fn step(&mut self, dt_seconds: f32);
-    fn raycast(&self, origin: [f32; 3], direction: [f32; 3], max_distance: f32) -> Option<EntityId>;
+    fn raycast(&self, origin: [f32; 3], direction: [f32; 3], max_distance: f32)
+        -> Option<EntityId>;
 }
 
 pub trait AudioRuntime {

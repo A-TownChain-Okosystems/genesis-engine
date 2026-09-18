@@ -82,9 +82,7 @@ impl FixedTimestep {
 
         self.accumulator += frame_dt;
         let mut steps = 0;
-        while self.accumulator >= self.config.fixed_dt
-            && steps < self.config.max_steps_per_frame
-        {
+        while self.accumulator >= self.config.fixed_dt && steps < self.config.max_steps_per_frame {
             self.accumulator -= self.config.fixed_dt;
             steps += 1;
         }
@@ -114,11 +112,19 @@ mod tests {
     #[test]
     fn rejects_invalid_configuration() {
         assert_eq!(
-            RuntimeConfig { fixed_dt: 0.0, ..Default::default() }.validate(),
+            RuntimeConfig {
+                fixed_dt: 0.0,
+                ..Default::default()
+            }
+            .validate(),
             Err(RuntimeConfigError::InvalidFixedDt)
         );
         assert_eq!(
-            RuntimeConfig { max_steps_per_frame: 0, ..Default::default() }.validate(),
+            RuntimeConfig {
+                max_steps_per_frame: 0,
+                ..Default::default()
+            }
+            .validate(),
             Err(RuntimeConfigError::InvalidStepLimit)
         );
     }

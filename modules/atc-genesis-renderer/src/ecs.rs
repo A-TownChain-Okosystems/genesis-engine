@@ -1,8 +1,8 @@
 use atc_genesis_ecs::World;
 use atc_genesis_platform::EntityId;
 
-use crate::{DrawCommand, RenderGraph};
 use crate::resources::{MeshMaterialBinding, RenderResourceBindings};
+use crate::{DrawCommand, RenderGraph};
 
 impl RenderGraph {
     pub fn rebuild_from_world_with_resources(
@@ -29,7 +29,9 @@ impl RenderGraph {
         resources: &RenderResourceBindings,
         entity: EntityId,
     ) -> bool {
-        let Some(transform) = world.world_transform(entity) else { return false; };
+        let Some(transform) = world.world_transform(entity) else {
+            return false;
+        };
         let binding = resources.binding(entity);
         self.push(DrawCommand {
             entity,
