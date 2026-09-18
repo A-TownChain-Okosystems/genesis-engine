@@ -2,7 +2,7 @@ pub mod security;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct NetworkEntity(pub u64);
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Tick(pub u64);
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReplicationMode {
@@ -177,7 +177,7 @@ impl PredictionBuffer {
     pub fn push(&mut self, tick: Tick, input: [f32; 3]) {
         self.inputs.push((tick, input));
         if self.inputs.len() > self.capacity {
-            self.inputs.remove(0)
+            self.inputs.remove(0);
         }
     }
     pub fn inputs_after(&self, tick: Tick) -> impl Iterator<Item = (Tick, [f32; 3])> + '_ {
