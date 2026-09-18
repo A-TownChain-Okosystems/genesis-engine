@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+# ruff: isort: skip_file
+
 from dataclasses import dataclass
 
 from gff.artifacts import ArtifactKind, ArtifactRef
