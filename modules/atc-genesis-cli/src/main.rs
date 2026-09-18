@@ -58,7 +58,7 @@ fn run_cargo(command: &str, profile: Option<&str>) {
     let mut c = std::process::Command::new("cargo");
     c.arg(command).arg("--workspace").arg("--all-targets");
     if profile == Some("release") {
-        c.arg("--release")
+        c.arg("--release");
     }
     match c.status() {
         Ok(s) if s.success() => println!("cargo {command}: PASS"),
