@@ -7,7 +7,7 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct EntityId(pub u64);
 
-# [derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct AssetId(pub u128);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
