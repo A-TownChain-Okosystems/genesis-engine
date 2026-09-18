@@ -1,6 +1,6 @@
 """ATC-9900 DAO-Modell (factory.atc / factory.py-Prototyp, portiert & bereinigt)."""
 from __future__ import annotations
-import hashlib, time
+import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
 class FranchiseStatus(Enum):
@@ -10,19 +10,20 @@ class RoyaltyTier(Enum):
 @dataclass
 class FranchiseVault:
     balance: float=0.0; total_in: float=0.0; total_out: float=0.0; transactions:list[dict]=field(default_factory=list)
+    _clock: float=field(default=0.0, repr=False, compare=False)
     def deposit(self, amount:float, from_addr:str, note:str="")->None:
         if amount<0: raise ValueError("deposit: negativer Betrag")
         self.balance+=amount; self.total_in+=amount
-        self.transactions.append({"type":"deposit","amount":amount,"from":from_addr,"note":note,"ts":time.time()})
+        self.transactions.append({"type":"deposit","amount":amount,"from":from_addr,"note":note,"ts":self._clock})
     def withdraw(self, amount:float, to_addr:str, note:str="")->bool:
         if amount>self.balance: return False
         self.balance-=amount; self.total_out+=amount
-        self.transactions.append({"type":"withdraw","amount":amount,"to":to_addr,"note":note,"ts":time.time()}); return True
+        self.transactions.append({"type":"withdraw","amount":amount,"to":to_addr,"note":note,"ts":self._clock}); return True
 @dataclass
 class Franchise:
     id:str; name:str; owner:str; description:str; token_symbol:str; token_supply:float
     royalty_tier:RoyaltyTier=RoyaltyTier.BRONZE; status:FranchiseStatus=FranchiseStatus.PROPOSAL
-    created:float=field(default_factory=time.time); members:dict[str,float]=field(default_factory=dict)
+    created:float=0.0; members:dict[str,float]=field(default_factory=dict)
     vault:FranchiseVault=field(default_factory=FranchiseVault); proposals:list[dict]=field(default_factory=list)
     def add_member(self,addr:str,stake:float)->None:
         if stake<0: raise ValueError("add_member: negativer Stake")
@@ -39,7 +40,7 @@ class Franchise:
 class FranchiseFactory:
     def __init__(self)->None: self._franchises={}; self._owner_index={}
     def create(self,name,owner,description,token_symbol,token_supply=1_000_000,royalty_tier=RoyaltyTier.BRONZE):
-        fid=hashlib.sha256(f"{name}{owner}{time.time()}".encode()).hexdigest()[:16]
+        fid=hashlib.sha256(f"{name}|{owner}|{len(self._franchises)}".encode()).hexdigest()[:16]
         f=Franchise(fid,name,owner,description,token_symbol,token_supply,royalty_tier,FranchiseStatus.ACTIVE)
         f.add_member(owner,token_supply*0.2); self._franchises[fid]=f; self._owner_index.setdefault(owner,[]).append(fid); return f
     def get(self,fid): return self._franchises.get(fid)
