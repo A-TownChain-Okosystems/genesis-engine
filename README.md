@@ -207,7 +207,7 @@ Apache-2.0 — A-TownChain-Okosystems. Details siehe [`LICENSE`](LICENSE).
 ## Compliance
 
 <!-- ATC compliance badge -->
-**ATC Compliance: COMPLIANT**
+![ATC COMPLIANCE](https://img.shields.io/badge/ATC%20COMPLIANCE-R3%20%C2%B7%20ATC--STD--201%2F202%2F203-brightgreen)
 
 ## Architecture
 ## Installation
