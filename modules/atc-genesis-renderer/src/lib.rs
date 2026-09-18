@@ -29,7 +29,7 @@ impl Default for Camera {
         Self {
             position: [0.0; 3],
             forward: [0.0, 0.0, -1.0],
-            fov_y_radians: f32::consts::FRAC_PI_3,
+            fov_y_radians: std::f32::consts::FRAC_PI_3,
             near: 0.1,
             far: 1000.0,
         }
