@@ -26,3 +26,5 @@ from gff.workflows import (
     WorkflowRegistry,
     WorkflowStage,
 )
+
+__all__ = [name for name in globals() if not name.startswith('_')]
