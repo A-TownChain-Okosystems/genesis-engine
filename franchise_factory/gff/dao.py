@@ -1,5 +1,7 @@
 """ATC-9900 DAO-Modell (factory.atc / factory.py-Prototyp, portiert & bereinigt)."""
 from __future__ import annotations
+
+# ruff: isort: skip_file
 import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
