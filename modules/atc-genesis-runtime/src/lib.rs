@@ -104,7 +104,11 @@ impl<R, A, N: ReplicationTransport> GenesisRuntime<R, A, N> {
     pub fn input_event(&mut self, event: InputEvent) {
         self.input.apply(event)
     }
-    pub fn queue_movement(&mut self, entity: EntityId, config: MovementConfig) -> atc_genesis_gameplay::GameplayCommand {
+    pub fn queue_movement(
+        &mut self,
+        entity: EntityId,
+        config: MovementConfig,
+    ) -> atc_genesis_gameplay::GameplayCommand {
         self.gameplay.sample_movement(&self.input, entity, config)
     }
     pub fn update_gameplay(&mut self, dt: f32) -> usize {
