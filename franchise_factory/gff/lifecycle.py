@@ -1,6 +1,6 @@
 """Lifecycle Manager (AD-43)."""
 from __future__ import annotations
-import hashlib,time
+import hashlib
 from dataclasses import dataclass,field
 from enum import Enum
 class LPhase(Enum):
@@ -23,7 +23,7 @@ def _init_templates():
     spec=[(LPhase.IDEA,"Idea","Concept",14,["Vision"],["Approved"]),(LPhase.CONCEPT,"Concept","Design",30,["GDD"],["GDD OK"]),(LPhase.PROTOTYPE,"Prototype","Playable",60,["Slice"],["Playable"]),(LPhase.PRE_PROD,"PreProd","Planning",90,["Plan"],["Plan OK"]),(LPhase.PRODUCTION,"Production","Content",365,["Levels"],["Complete"]),(LPhase.ALPHA,"Alpha","Features",60,["Features"],["Alpha"]),(LPhase.BETA,"Beta","Polish",60,["Bugs"],["Beta"]),(LPhase.RELEASE,"Release","Launch",30,["Gold"],["Launched"]),(LPhase.LIVE_OPS,"LiveOps","Ops",0,["Seasons"],["Active"]),(LPhase.EXPANSION,"Expansion","DLC",180,["DLC"],["DLC OK"]),(LPhase.SUCCESSOR,"Successor","Next",365,["Plan"],["New"]),(LPhase.ARCHIVED,"Archived","End",0,[],["Closed"])]
     return {p:PhaseTemplate(p,n,d,dur,de,cr) for p,n,d,dur,de,cr in spec}
 class LifecycleManager:
-    def __init__(self): self.franchises={}; self.templates=_init_templates(); self.transitions=[]; self.milestones={}; self._now=time.time()
+    def __init__(self): self.franchises={}; self.templates=_init_templates(); self.transitions=[]; self.milestones={}; self._now=0.0
     def register(self,name,budget=0.0,target=0.0,*,now=None):
         if not name: raise ValueError("register: name leer")
         ts=self._now if now is None else now; fid=hashlib.sha256(f"{name}|{ts}".encode()).hexdigest()[:16]
