@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
+
+
 class ArtifactKind(StrEnum):
     GAME_BIBLE="game-bible"; WORLD_BIBLE="world-bible"; LORE="lore"; CHARACTER="character"; CREATURE="creature"; QUEST="quest"; LEVEL="level"; ITEM="item"; WEAPON="weapon"; ANIMATION="animation"; AUDIO="audio"; VFX="vfx"; COMBAT="combat"; NPC_AI="npc-ai"; ECONOMY="economy"; MULTIPLAYER="multiplayer"; BUILD="build"; QA_REPORT="qa-report"; LIVEOPS_PLAN="liveops-plan"
 @dataclass(frozen=True, slots=True)
