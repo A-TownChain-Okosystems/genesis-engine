@@ -8,7 +8,6 @@ ohne Executor laeuft die Pipeline im ehrlichen DRY-RUN (kein Fake-Output).
 from __future__ import annotations
 
 import hashlib
-import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -104,13 +103,15 @@ class GFFCore:
         self.pipeline_running = False
         self.events: list[dict] = []
         self.factory_specs: dict[int, FactorySpec] = load_specs(spec_dir) if spec_dir is not None else {}
+        self._event_clock = 0.0
         self._emit("GFFInitialized", version=version)
 
     def _emit(self, event: str, **data) -> None:
-        self.events.append({"event": event, "ts": time.time(), **data})
+        self.events.append({"event": event, "ts": self._event_clock, **data})
+        self._event_clock += 1.0
 
     def create_franchise(self, blueprint: FranchiseBlueprint, *, now: float | None = None) -> str:
-        ts = time.time() if now is None else now
+        ts = self._event_clock if now is None else now
         fid = hashlib.sha256(f"{blueprint.name}|{ts}".encode()).hexdigest()[:16]
         if not blueprint.name:
             raise ValueError("blueprint.name darf nicht leer sein")
