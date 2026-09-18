@@ -553,7 +553,7 @@ impl World {
         self.components
             .entry(TypeId::of::<T>())
             .or_insert_with(|| {
-                Box::new(TypedComponentTable {
+                Box::new(TypedComponentTable::<T> {
                     values: HashMap::new(),
                     added: HashSet::new(),
                     changed: HashSet::new(),
@@ -569,16 +569,19 @@ impl World {
             return false;
         }
         let type_id = TypeId::of::<T>();
-        let table = self.component_table::<T>();
-        let inserted = table.values.insert(id, component).is_none();
+        let inserted = {
+            let table = self.component_table::<T>();
+            let inserted = table.values.insert(id, component).is_none();
+            if inserted { table.added.insert(id); }
+            table.changed.insert(id);
+            inserted
+        };
         if inserted {
-            table.added.insert(id);
             self.lifecycle.emit(LifecycleEvent::ComponentInserted {
                 entity: id,
                 component: type_id,
             });
         }
-        table.changed.insert(id);
         inserted
     }
 
@@ -691,7 +694,7 @@ impl World {
     }
 
     pub fn has_resource<T: Any + Send + Sync>(&self) -> bool {
-        self.resources.contains()
+        self.resources.contains::<T>()
     }
 
     pub fn resource_count(&self) -> usize {
