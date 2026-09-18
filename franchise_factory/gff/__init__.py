@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 """Genesis Franchise Factory (GFF) — Core-Paket.
 
 Content-Pipeline-Orchestrator des Genesis-Oekosystems.
