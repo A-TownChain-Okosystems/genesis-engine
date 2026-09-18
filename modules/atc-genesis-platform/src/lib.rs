@@ -4,10 +4,10 @@
 //! implementation. Concrete backends can evolve independently behind these
 //! interfaces.
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# [derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct EntityId(pub u64);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+# [derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct AssetId(pub u128);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
