@@ -9,6 +9,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Build
-        run: cargo check --manifest-path sdk/Cargo.toml
+        run: cargo check --manifest-path modules/atc-genesis-sdk/Cargo.toml
       - name: Test
-        run: cargo test --manifest-path sdk/Cargo.toml
+        run: cargo test --manifest-path modules/atc-genesis-sdk/Cargo.toml
