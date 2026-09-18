@@ -1,8 +1,12 @@
 """Declarative AI production workflows for the Genesis Franchise Factory."""
 from __future__ import annotations
+
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Callable, Mapping
+from typing import Any
+
+# fmt: off
 class WorkflowStage(StrEnum):
     INPUT="input"; ANALYZE="analyze"; PLAN="plan"; PRODUCE="produce"; QUALITY="quality"; INTEGRATE="integrate"; PUBLISH="publish"; MONITOR="monitor"; OPTIMIZE="optimize"; REPLICATE="replicate"
 class FactoryId(StrEnum):
