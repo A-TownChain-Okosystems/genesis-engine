@@ -1,5 +1,7 @@
 """Typed artifact contracts for deterministic Game Factory orchestration."""
 from __future__ import annotations
+
+# ruff: isort: skip_file
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Mapping
