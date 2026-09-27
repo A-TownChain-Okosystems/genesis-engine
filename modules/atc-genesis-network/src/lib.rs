@@ -189,6 +189,9 @@ impl PredictionBuffer {
     pub fn len(&self) -> usize {
         self.inputs.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self.inputs.is_empty()
+    }
 }
 pub trait ReplicationTransport {
     fn send(&mut self, bytes: &[u8]) -> Result<(), String>;
