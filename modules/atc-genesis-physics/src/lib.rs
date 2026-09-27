@@ -106,8 +106,8 @@ impl PhysicsSimulation {
                 + body.velocity[2] * normal[2];
             if inward_velocity < 0.0 {
                 let impulse = (1.0 + body.restitution.clamp(0.0, 1.0)) * inward_velocity;
-                for i in 0..3 {
-                    body.velocity[i] -= normal[i] * impulse;
+                for (velocity, normal_component) in body.velocity.iter_mut().zip(normal) {
+                    *velocity -= normal_component * impulse;
                 }
             }
         }
