@@ -124,7 +124,7 @@ impl SpeciesDefinition {
         if self.primordial_force.trim().is_empty() {
             return Err(ValidationError::EmptyField("primordial_force"));
         }
-        validate_optional_id(&self.parent_species)?;
+        validate_optional_id(self.parent_species.as_ref())?;
         validate_list(&self.habitat_profiles, "habitat_profiles")?;
         validate_list(&self.physical_profile, "physical_profile")?;
         validate_list(&self.cultural_profiles, "cultural_profiles")?;
