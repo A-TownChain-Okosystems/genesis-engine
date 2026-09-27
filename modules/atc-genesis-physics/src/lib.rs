@@ -98,8 +98,8 @@ impl PhysicsSimulation {
                 break;
             };
             let correction = penetration + 1e-5;
-            for i in 0..3 {
-                body.position[i] += normal[i] * correction;
+            for (position, normal_component) in body.position.iter_mut().zip(normal) {
+                *position += normal_component * correction;
             }
             let inward_velocity = body.velocity[0] * normal[0]
                 + body.velocity[1] * normal[1]
