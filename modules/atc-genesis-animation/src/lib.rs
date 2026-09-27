@@ -44,7 +44,7 @@ impl Skeleton {
     pub fn validate(&self) -> bool {
         self.bones.iter().all(|b| {
             b.parent
-                .map_or(true, |p| p != b.id && self.bone(p).is_some())
+                .is_none_or(|p| p != b.id && self.bone(p).is_some())
         })
     }
     pub fn roots(&self) -> Vec<BoneId> {
