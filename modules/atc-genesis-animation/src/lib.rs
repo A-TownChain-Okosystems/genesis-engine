@@ -42,10 +42,9 @@ impl Skeleton {
         self.bones.iter().find(|b| b.id == id)
     }
     pub fn validate(&self) -> bool {
-        self.bones.iter().all(|b| {
-            b.parent
-                .is_none_or(|p| p != b.id && self.bone(p).is_some())
-        })
+        self.bones
+            .iter()
+            .all(|b| b.parent.is_none_or(|p| p != b.id && self.bone(p).is_some()))
     }
     pub fn roots(&self) -> Vec<BoneId> {
         self.bones
@@ -157,9 +156,8 @@ fn lerp_pose(a: PoseTransform, b: PoseTransform, t: f32) -> PoseTransform {
     for ((out, a), b) in out.scale.iter_mut().zip(a.scale).zip(b.scale) {
         *out = a + (b - a) * t;
     }
-    let q = std::array::from_fn(|i| {
-        a.rotation_xyzw[i] + (b.rotation_xyzw[i] - a.rotation_xyzw[i]) * t
-    });
+    let q =
+        std::array::from_fn(|i| a.rotation_xyzw[i] + (b.rotation_xyzw[i] - a.rotation_xyzw[i]) * t);
     let n = (q.iter().map(|v| v * v).sum::<f32>()).sqrt();
     out.rotation_xyzw = if n > f32::EPSILON {
         q.map(|v| v / n)
