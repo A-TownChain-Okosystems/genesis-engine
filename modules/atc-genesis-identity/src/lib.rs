@@ -58,7 +58,9 @@ impl LineageOwnerType {
             1 => Ok(Self::Bloodline),
             2 => Ok(Self::Tribe),
             3 => Ok(Self::Lineage),
-            _ => Err(ValidationError::MalformedSerialization("invalid lineage owner type")),
+            _ => Err(ValidationError::MalformedSerialization(
+                "invalid lineage owner type",
+            )),
         }
     }
 }
@@ -261,11 +263,17 @@ impl CharacterIdentity {
         validate_list(&self.ability_ids, "ability_ids")?;
         validate_list(&self.transformation_ids, "transformation_ids")?;
 
-        let species = registry.species.get(&self.species_id)
+        let species = registry
+            .species
+            .get(&self.species_id)
             .ok_or_else(|| ValidationError::UnknownSpecies(self.species_id.clone()))?;
-        let culture = registry.cultures.get(&self.culture_id)
+        let culture = registry
+            .cultures
+            .get(&self.culture_id)
             .ok_or_else(|| ValidationError::UnknownCulture(self.culture_id.clone()))?;
-        registry.lineages.get(&self.lineage_id)
+        registry
+            .lineages
+            .get(&self.lineage_id)
             .ok_or_else(|| ValidationError::UnknownLineage(self.lineage_id.clone()))?;
 
         if culture.species_id != species.id {
@@ -347,7 +355,10 @@ fn validate_id(value: &str, field: &'static str) -> Result<(), ValidationError> 
     if value.is_empty() {
         return Err(ValidationError::EmptyId(field));
     }
-    if !value.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-' || b == b'_') {
+    if !value
+        .bytes()
+        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-' || b == b'_')
+    {
         return Err(ValidationError::InvalidId(value.to_owned()));
     }
     Ok(())
@@ -402,7 +413,9 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(bytes: &'a [u8]) -> Self { Self { bytes, offset: 0 } }
+    fn new(bytes: &'a [u8]) -> Self {
+        Self { bytes, offset: 0 }
+    }
 
     fn magic(&mut self) -> Result<(), ValidationError> {
         if self.take(MAGIC.len())? != MAGIC {
@@ -412,12 +425,19 @@ impl<'a> Parser<'a> {
     }
 
     fn expect(&mut self, expected: &str) -> Result<(), ValidationError> {
-        if self.string()? == expected { Ok(()) }
-        else { Err(ValidationError::MalformedSerialization("unexpected record type")) }
+        if self.string()? == expected {
+            Ok(())
+        } else {
+            Err(ValidationError::MalformedSerialization(
+                "unexpected record type",
+            ))
+        }
     }
 
     fn byte(&mut self) -> Result<u8, ValidationError> {
-        let b = *self.bytes.get(self.offset)
+        let b = *self
+            .bytes
+            .get(self.offset)
             .ok_or(ValidationError::MalformedSerialization("unexpected eof"))?;
         self.offset += 1;
         Ok(b)
@@ -434,32 +454,45 @@ impl<'a> Parser<'a> {
         match self.byte()? {
             0 => Ok(None),
             1 => Ok(Some(self.string()?)),
-            _ => Err(ValidationError::MalformedSerialization("invalid option tag")),
+            _ => Err(ValidationError::MalformedSerialization(
+                "invalid option tag",
+            )),
         }
     }
 
     fn strings(&mut self) -> Result<Vec<String>, ValidationError> {
         let len = u32::from_be_bytes(self.take(4)?.try_into().unwrap()) as usize;
         let mut values = Vec::with_capacity(len);
-        for _ in 0..len { values.push(self.string()?); }
+        for _ in 0..len {
+            values.push(self.string()?);
+        }
         if values.windows(2).any(|w| w[0] > w[1]) {
-            return Err(ValidationError::MalformedSerialization("non-canonical list order"));
+            return Err(ValidationError::MalformedSerialization(
+                "non-canonical list order",
+            ));
         }
         Ok(values)
     }
 
     fn take(&mut self, len: usize) -> Result<&'a [u8], ValidationError> {
-        let end = self.offset.checked_add(len)
+        let end = self
+            .offset
+            .checked_add(len)
             .ok_or(ValidationError::MalformedSerialization("length overflow"))?;
-        let value = self.bytes.get(self.offset..end)
+        let value = self
+            .bytes
+            .get(self.offset..end)
             .ok_or(ValidationError::MalformedSerialization("unexpected eof"))?;
         self.offset = end;
         Ok(value)
     }
 
     fn finish(&self) -> Result<(), ValidationError> {
-        if self.offset == self.bytes.len() { Ok(()) }
-        else { Err(ValidationError::TrailingBytes) }
+        if self.offset == self.bytes.len() {
+            Ok(())
+        } else {
+            Err(ValidationError::TrailingBytes)
+        }
     }
 }
 
@@ -473,7 +506,9 @@ pub fn baseline_species() -> Vec<SpeciesDefinition> {
         ("fairy", "Fairies", "arcana"),
         ("vampire", "Vampires", "death"),
         ("werewolf", "Werewolves", "life"),
-    ].into_iter().map(|(id, name, force)| SpeciesDefinition {
+    ]
+    .into_iter()
+    .map(|(id, name, force)| SpeciesDefinition {
         id: id.into(),
         display_name: name.into(),
         parent_species: None,
@@ -485,7 +520,8 @@ pub fn baseline_species() -> Vec<SpeciesDefinition> {
         abilities: vec!["species-defined".into()],
         transformations: Vec::new(),
         resource_affinities: vec!["species-defined".into()],
-    }).collect()
+    })
+    .collect()
 }
 
 #[cfg(test)]
@@ -493,7 +529,10 @@ mod tests {
     use super::*;
 
     fn registry() -> IdentityRegistry {
-        let species = baseline_species().into_iter().map(|s| (s.id.clone(), s)).collect();
+        let species = baseline_species()
+            .into_iter()
+            .map(|s| (s.id.clone(), s))
+            .collect();
         let culture = CultureDefinition {
             id: "moon-grove".into(),
             species_id: "forest-elf".into(),
