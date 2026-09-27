@@ -288,10 +288,6 @@ impl SystemSchedule {
         self.systems.is_empty()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.systems.is_empty()
-    }
-
     pub fn get(&self, id: SystemId) -> Option<&SystemDescriptor> {
         self.systems.get(&id)
     }
@@ -456,6 +452,10 @@ impl SystemExecutor {
 
     pub fn len(&self) -> usize {
         self.systems.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.systems.is_empty()
     }
 
     pub fn parallel_batches(&self) -> Result<Vec<Vec<SystemId>>, ScheduleError> {
