@@ -243,7 +243,7 @@ pub struct TextureAsset {
 }
 impl TextureAsset {
     pub fn validate(&self) -> bool {
-        matches!(self.channels, 1 | 2 | 3 | 4)
+        matches!(self.channels, 1..=4)
             && self.width > 0
             && self.height > 0
             && self.pixels.len()
