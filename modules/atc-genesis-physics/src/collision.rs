@@ -154,6 +154,9 @@ impl CollisionWorld {
     pub fn len(&self) -> usize {
         self.colliders.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self.colliders.is_empty()
+    }
 }
 
 #[cfg(test)]
@@ -189,10 +192,9 @@ mod tests {
             min: [-1.0; 3],
             max: [1.0; 3],
         };
-        assert_eq!(
-            aabb.point_resolution([0.9, 0.0, 0.0]),
-            Some(([1.0, 0.0, 0.0], 0.1))
-        );
+        let resolution = aabb.point_resolution([0.9, 0.0, 0.0]).unwrap();
+        assert_eq!(resolution.0, [1.0, 0.0, 0.0]);
+        assert!((resolution.1 - 0.1).abs() < 1e-6);
     }
 
     #[test]

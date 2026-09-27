@@ -184,7 +184,7 @@ impl MeshAsset {
         if self.vertices.len() != self.uvs.len() {
             return Err("vertex/uv count mismatch".into());
         }
-        if self.indices.len() % 3 != 0 {
+        if !self.indices.len().is_multiple_of(3) {
             return Err("index count must be divisible by three".into());
         }
         if self
@@ -243,7 +243,7 @@ pub struct TextureAsset {
 }
 impl TextureAsset {
     pub fn validate(&self) -> bool {
-        matches!(self.channels, 1 | 2 | 3 | 4)
+        matches!(self.channels, 1..=4)
             && self.width > 0
             && self.height > 0
             && self.pixels.len()

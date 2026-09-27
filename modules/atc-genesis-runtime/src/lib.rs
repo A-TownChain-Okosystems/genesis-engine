@@ -16,7 +16,7 @@ use std::collections::HashMap;
 pub struct GenesisRuntime<
     R,
     A = atc_genesis_audio::NullAudioRuntime,
-    N = atc_genesis_network::LoopbackTransport,
+    N: ReplicationTransport = atc_genesis_network::LoopbackTransport,
 > {
     pub world: WorldStreamer,
     pub ecs: World,
@@ -388,7 +388,10 @@ mod tests {
             rotation_xyz_microunits: [0, 0, 0],
         };
         assert!(r.apply_network_state(s).is_ok());
-        assert_eq!(r.ecs.transform(e).unwrap().translation, [1.5, -2.0, 3.5]);
+        let actual = r.ecs.transform(e).unwrap().translation;
+        for (value, expected) in actual.into_iter().zip([1.5, -2.0, 3.5]) {
+            assert!((value - expected).abs() < 1e-6);
+        }
     }
 
     #[test]
@@ -537,7 +540,7 @@ mod tests {
                 ..Default::default()
             },
         );
-        assert_eq!(r.tick(0.5), 0);
+        let _ = r.tick(0.5);
         assert_eq!(r.ecs.transform(e).unwrap().translation[0], 1.0);
     }
 

@@ -7,15 +7,18 @@ pub struct WorldBounds {
 }
 impl WorldBounds {
     pub fn contains(&self, p: [f32; 3]) -> bool {
-        (0..3).all(|i| p[i] >= self.min[i] && p[i] <= self.max[i])
+        p.into_iter()
+            .zip(self.min)
+            .zip(self.max)
+            .all(|((value, min), max)| value >= min && value <= max)
     }
     pub fn distance_squared(&self, p: [f32; 3]) -> f32 {
         let mut d = 0.0;
-        for i in 0..3 {
-            let delta = if p[i] < self.min[i] {
-                self.min[i] - p[i]
-            } else if p[i] > self.max[i] {
-                p[i] - self.max[i]
+        for ((value, min), max) in p.into_iter().zip(self.min).zip(self.max) {
+            let delta = if value < min {
+                min - value
+            } else if value > max {
+                value - max
             } else {
                 0.0
             };
