@@ -154,6 +154,9 @@ impl CollisionWorld {
     pub fn len(&self) -> usize {
         self.colliders.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self.colliders.is_empty()
+    }
 }
 
 #[cfg(test)]
