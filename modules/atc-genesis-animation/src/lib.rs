@@ -131,7 +131,7 @@ impl Default for AnimationPlayer {
 }
 impl AnimationPlayer {
     pub fn update(&mut self, dt: f32, duration: f32) {
-        self.time_seconds += (dt.max(0.0) * self.speed);
+        self.time_seconds += dt.max(0.0) * self.speed;
         if duration > 0.0 {
             if self.looping {
                 self.time_seconds = self.time_seconds.rem_euclid(duration)
