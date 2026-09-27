@@ -3,7 +3,7 @@
 //! This crate intentionally contains no moral/alignment field on species.
 //! Gameplay systems consume validated IDs rather than branching on concrete species.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 const MAGIC: &[u8] = b"GNS-ID-1";
@@ -364,7 +364,8 @@ fn validate_list(values: &[String], field: &'static str) -> Result<(), Validatio
     if values.iter().any(|v| v.trim().is_empty()) {
         return Err(ValidationError::EmptyField(field));
     }
-    if values.windows(2).any(|w| w[0] == w[1]) {
+    let mut unique = BTreeSet::new();
+    if values.iter().any(|value| !unique.insert(value)) {
         return Err(ValidationError::DuplicateId(field.to_owned()));
     }
     Ok(())
