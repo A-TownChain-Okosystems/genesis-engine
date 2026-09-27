@@ -16,7 +16,7 @@ use std::collections::HashMap;
 pub struct GenesisRuntime<
     R,
     A = atc_genesis_audio::NullAudioRuntime,
-    N = atc_genesis_network::LoopbackTransport,
+    N: ReplicationTransport = atc_genesis_network::LoopbackTransport,
 > {
     pub world: WorldStreamer,
     pub ecs: World,
