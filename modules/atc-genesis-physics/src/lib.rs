@@ -263,9 +263,11 @@ mod tests {
 
     #[test]
     fn floor_stops_body() {
-        let mut c = PhysicsConfig::default();
-        c.gravity = [0.0, -10.0, 0.0];
-        c.floor_y = Some(0.0);
+        let c = PhysicsConfig {
+            gravity: [0.0, -10.0, 0.0],
+            floor_y: Some(0.0),
+            ..Default::default()
+        };
         let mut s = PhysicsSimulation::new(c);
         s.add_body(RigidBody::dynamic(EntityId(1), [0.0, 0.01, 0.0], 1.0));
         for _ in 0..10 {
