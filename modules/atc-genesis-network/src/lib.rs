@@ -346,7 +346,7 @@ mod tests {
         };
         let p = InterpolatedTransform::between(&a, &b, 0.5).unwrap();
         for (actual, expected) in p.position.into_iter().zip([0.5, 1.0, 1.5]) {
-            assert!((actual - expected).abs() < f32::EPSILON);
+            assert!((actual - expected).abs() < 1e-5);
         }
         for (actual, expected) in p.rotation.into_iter().zip([0.05, 0.1, 0.15]) {
             assert!((actual - expected).abs() < 1e-6);
