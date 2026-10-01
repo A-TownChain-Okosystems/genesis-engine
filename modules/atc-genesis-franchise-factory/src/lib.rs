@@ -2,11 +2,53 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ArtifactKind { GameBible, WorldBible, Lore, Character, Creature, Quest, Level, Item, Weapon, Animation, Audio, Vfx, Combat, NpcAi, Economy, Multiplayer, Build, QaReport, LiveOpsPlan }
 
+impl ArtifactKind {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::GameBible => "game-bible", Self::WorldBible => "world-bible", Self::Lore => "lore",
+            Self::Character => "character", Self::Creature => "creature", Self::Quest => "quest",
+            Self::Level => "level", Self::Item => "item", Self::Weapon => "weapon", Self::Animation => "animation",
+            Self::Audio => "audio", Self::Vfx => "vfx", Self::Combat => "combat", Self::NpcAi => "npc-ai",
+            Self::Economy => "economy", Self::Multiplayer => "multiplayer", Self::Build => "build",
+            Self::QaReport => "qa-report", Self::LiveOpsPlan => "liveops-plan",
+        }
+    }
+    pub fn parse(value: &str) -> Option<Self> {
+        Some(match value {
+            "game-bible"=>Self::GameBible, "world-bible"=>Self::WorldBible, "lore"=>Self::Lore,
+            "character"=>Self::Character, "creature"=>Self::Creature, "quest"=>Self::Quest,
+            "level"=>Self::Level, "item"=>Self::Item, "weapon"=>Self::Weapon, "animation"=>Self::Animation,
+            "audio"=>Self::Audio, "vfx"=>Self::Vfx, "combat"=>Self::Combat, "npc-ai"=>Self::NpcAi,
+            "economy"=>Self::Economy, "multiplayer"=>Self::Multiplayer, "build"=>Self::Build,
+            "qa-report"=>Self::QaReport, "liveops-plan"=>Self::LiveOpsPlan, _=>return None
+        })
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ArtifactRef { pub id: String, pub kind: ArtifactKind, pub version: String, pub producer: String }
+pub struct ArtifactRef { pub id: String, pub kind: ArtifactKind, pub version: String, pub producer: String, pub content_hash: Option<String> }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArtifactEnvelope {
+    pub reference: ArtifactRef,
+    pub dependencies: Vec<ArtifactRef>,
+    pub evidence: Vec<(String, String)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ArtifactContractError { EmptyId, EmptyVersion, EmptyProducer, EmptyDependencyId }
+
+pub fn validate_artifact(artifact: &ArtifactEnvelope) -> Result<(), ArtifactContractError> {
+    if artifact.reference.id.trim().is_empty() { return Err(ArtifactContractError::EmptyId); }
+    if artifact.reference.version.trim().is_empty() { return Err(ArtifactContractError::EmptyVersion); }
+    if artifact.reference.producer.trim().is_empty() { return Err(ArtifactContractError::EmptyProducer); }
+    if artifact.dependencies.iter().any(|d| d.id.trim().is_empty()) { return Err(ArtifactContractError::EmptyDependencyId); }
+    Ok(())
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GameFactoryNode { pub id: &'static str, pub produces: ArtifactKind, pub requires: &'static [ArtifactKind] }
@@ -72,8 +114,13 @@ pub fn transition(from:LifecyclePhase,to:LifecyclePhase)->Result<LifecyclePhase,
 #[cfg(test)]
 mod tests{
  use super::*;
- #[test]fn graph_validates_and_orders(){validate_graph(GAME_FACTORY_GRAPH).unwrap();let o=topological_order(GAME_FACTORY_GRAPH).unwrap();assert_eq!(o.first(),Some(&"concept"));assert_eq!(o.last(),Some(&"liveops"));assert_eq!(o.len(),GAME_FACTORY_GRAPH.len());}
+ #[test]fn graph_validates_and_orders(){validate_graph(GAME_FACTORY_GRAPH).unwrap();let o=topological_order(GAME_FACTORY_GRAPH).unwrap();assert_eq!(o.first(),Some(&"concept"));assert_eq!(o.last(),Some(&"liveops"));assert_eq!(o.len(),GAME_FACTORY_GRAPH.len());
+        assert_eq!(ArtifactKind::GameBible.as_str(), "game-bible");
+        assert_eq!(ArtifactKind::parse("qa-report"), Some(ArtifactKind::QaReport));
+        assert_eq!(ArtifactKind::parse("unknown"), None);}
  #[test]fn graph_fails_closed(){let g=[GameFactoryNode{id:"broken",produces:ArtifactKind::Build,requires:&[ArtifactKind::Lore]}];assert!(matches!(validate_graph(&g),Err(GraphError::MissingProducer{..})));}
  #[test]fn workflow_requires_quality(){assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Produce]),Err(WorkflowError::MissingQualityGate));}
- #[test]fn lifecycle_is_sequential_or_archive(){assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Concept).is_ok());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Production).is_err());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Archived).is_ok());}
+ #[test]fn lifecycle_is_sequential_or_archive(){assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Concept).is_ok());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Production).is_err());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Archived).is_ok());
+        let a=ArtifactEnvelope{reference:ArtifactRef{id:"x".into(),kind:ArtifactKind::Item,version:"1.0.0".into(),producer:"factory".into(),content_hash:None},dependencies:vec![],evidence:vec![]};
+        validate_artifact(&a).unwrap();}
 }
