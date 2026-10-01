@@ -106,6 +106,44 @@ pub fn validate_workflow(stages:&[WorkflowStage])->Result<(),WorkflowError>{
  if !stages.contains(&WorkflowStage::Quality){return Err(WorkflowError::MissingQualityGate)} let mut seen=BTreeSet::new(); for s in stages{if !seen.insert(*s){return Err(WorkflowError::DuplicateStage)}} Ok(())
 }
 
+#[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord,Hash)]
+pub enum FactoryId { Text, Software, Game, Marketing, Business, Document, Research, Ecommerce, CustomerService, Automation, Knowledge, Agent, Franchise, Startup, Education, Book, VirtualWorld }
+impl FactoryId {
+ pub const fn as_str(self)->&'static str{match self{
+  Self::Text=>"text-content",Self::Software=>"software",Self::Game=>"game",Self::Marketing=>"marketing",Self::Business=>"business",Self::Document=>"document",Self::Research=>"research",Self::Ecommerce=>"e-commerce",Self::CustomerService=>"customer-service",Self::Automation=>"automation",Self::Knowledge=>"knowledge",Self::Agent=>"agent",Self::Franchise=>"franchise",Self::Startup=>"startup",Self::Education=>"education",Self::Book=>"book",Self::VirtualWorld=>"virtual-world"}}
+}
+#[derive(Debug,Clone,PartialEq,Eq)]
+pub struct WorkflowDefinition { pub id:String,pub name:String,pub stages:Vec<WorkflowStage>,pub capabilities:Vec<String>,pub outputs:Vec<String>,pub description:String }
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub enum WorkflowRegistryError { EmptyRegistry,MustStartWithInput,MissingQualityGate,DuplicateStage,UnknownWorkflow }
+pub struct WorkflowRegistry { definitions:BTreeMap<String,WorkflowDefinition> }
+impl WorkflowRegistry {
+ pub fn new(definitions:Vec<WorkflowDefinition>)->Result<Self,WorkflowRegistryError>{
+  if definitions.is_empty(){return Err(WorkflowRegistryError::EmptyRegistry)}
+  let mut map=BTreeMap::new();
+  for d in definitions {
+   validate_workflow(&d.stages).map_err(|e|match e{WorkflowError::EmptyStages=>WorkflowRegistryError::EmptyRegistry,WorkflowError::MustStartWithInput=>WorkflowRegistryError::MustStartWithInput,WorkflowError::MissingQualityGate=>WorkflowRegistryError::MissingQualityGate,WorkflowError::DuplicateStage=>WorkflowRegistryError::DuplicateStage})?;
+   map.insert(d.id.clone(),d);
+  }
+  Ok(Self{definitions:map})
+ }
+ pub fn get(&self,id:&str)->Result<&WorkflowDefinition,WorkflowRegistryError>{self.definitions.get(id).ok_or(WorkflowRegistryError::UnknownWorkflow)}
+ pub fn all(&self)->impl Iterator<Item=&WorkflowDefinition>{self.definitions.values()}
+}
+fn default_workflow(factory:FactoryId,name:&str,c:&[&str],o:&[&str],description:&str)->WorkflowDefinition{
+ WorkflowDefinition{id:factory.as_str().into(),name:name.into(),
+ stages:vec![WorkflowStage::Input,WorkflowStage::Analyze,WorkflowStage::Plan,WorkflowStage::Produce,WorkflowStage::Quality,WorkflowStage::Integrate,WorkflowStage::Publish,WorkflowStage::Monitor,WorkflowStage::Optimize],
+ capabilities:c.iter().map(|x|(*x).into()).collect(),outputs:o.iter().map(|x|(*x).into()).collect(),description:description.into()}
+}
+pub fn default_workflows()->Vec<WorkflowDefinition>{vec![
+ default_workflow(FactoryId::Text,"Text / Content Factory",&["writing","translation","seo"],&["content","localized-content"],"Text and content production."),
+ default_workflow(FactoryId::Software,"Software Factory",&["specification","architecture","code","tests","deployment"],&["source","tests","documentation","release"],"Software delivery from idea to deployment."),
+ default_workflow(FactoryId::Game,"Game Factory",&["game-design","world","lore","characters","quests","gameplay","assets","ai-npc","testing","liveops"],&["game-bible","game-content","build","liveops-plan"],"End-to-end game production."),
+ default_workflow(FactoryId::Franchise,"Franchise Factory",&["business-model","brand","product","content","software","marketing","sales","automation","replication"],&["franchise-package","operating-model","replication-plan"],"Replicate a validated business system as a franchise package."),
+ default_workflow(FactoryId::Startup,"Startup Factory",&["validation","mvp","branding","product","launch","kpis"],&["startup-package","mvp-plan","launch-plan"],"Startup formation from idea to launch."),
+ default_workflow(FactoryId::VirtualWorld,"Virtual World Factory",&["world","geography","cities","buildings","npcs","economy","factions","lore","simulation"],&["world-bible","world-data","simulation"],"Persistent virtual-world production."),
+]}
+
 #[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
 pub enum LifecyclePhase { Idea, Concept, Prototype, PreProd, Production, Alpha, Beta, Release, LiveOps, Expansion, Successor, Archived }
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
