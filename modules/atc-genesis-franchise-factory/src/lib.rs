@@ -365,9 +365,6 @@ impl FranchiseFactoryCore {
                 let franchise = self.franchises.get(franchise_id).cloned().expect("validated above");
                 let outcome = executor.unwrap_or(noop_executor)(&stage, &franchise);
                 if !outcome.success {
-                    if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
-                        current.status = PipelineStatus::Pending;
-                    }
                     self.events.push(format!("StageFailed:{}:{}:{}", franchise_id, stage.name, outcome.note));
                     return Err(format!("pipeline stage failed: {}", stage.name));
                 }
