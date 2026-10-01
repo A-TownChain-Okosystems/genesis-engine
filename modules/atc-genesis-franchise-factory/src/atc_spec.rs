@@ -169,7 +169,8 @@ fn consume_type(tokens: &[Token], mut i: usize) -> Result<(String, usize), SpecE
                 angle_depth -= 1; ty.push('>'); i += 1;
             }
             TokenKind::Symbol(',') if angle_depth > 0 => { ty.push(','); i += 1; }
-            TokenKind::Symbol('[') => { ty.push('['); i += 1; }\n            TokenKind::Symbol(']') => { ty.push(']'); i += 1; }
+            TokenKind::Symbol('[') => { ty.push('['); i += 1; }
+            TokenKind::Symbol(']') => { ty.push(']'); i += 1; }
             _ => break,
         }
     }
