@@ -1,3 +1,7 @@
+pub mod atc_spec;
+
+pub use atc_spec::{parse_spec, validate_spec_set, AtcSpec, SpecError};
+
 //! Canonical Rust core for the Genesis Franchise Factory.
 
 use sha2::{Digest, Sha256};
