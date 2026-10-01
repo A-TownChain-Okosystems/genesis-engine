@@ -426,7 +426,11 @@ mod tests{
      assert!(core.pipeline.iter().any(|s| s.status == PipelineStatus::Skipped));
      assert_eq!(core.franchises[&id].progress, 1.0);
      assert_eq!(core.franchises[&id].factories_used.len(), 9);
-     assert!(core.events.iter().any(|e| e.event == "PipelineComplete"));
+     assert_eq!(core.events[0].event, "GFFInitialized");
+     assert_eq!(core.events[0].ts, 0);
+     assert_eq!(core.events[1].event, "FranchiseCreated");
+     assert_eq!(core.events[1].ts, 1);
+     assert!(core.events.iter().any(|e| e.event == "PipelineComplete" && e.progress == Some(10000)));
      core.reset_pipeline();
      assert!(core.pipeline.iter().all(|s| s.status == PipelineStatus::Pending));
  }
@@ -464,6 +468,7 @@ mod tests{
      let mid = manager.add_milestone(&id, "Slice", LifecyclePhase::Prototype, 2, vec!["Playable".into()]).unwrap();
      manager.achieve_milestone(&mid, 2, vec!["Playable".into()]).unwrap();
      assert_eq!(manager.milestones[&mid].status, MilestoneStatus::Achieved);
+     assert_eq!(manager.franchises[&id].milestones, vec![mid.clone()]);
      let health=manager.health(&id).unwrap();
      assert_eq!(health.3, 0.0);
  }
