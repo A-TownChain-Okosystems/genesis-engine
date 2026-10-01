@@ -414,6 +414,63 @@ mod tests{
         let item_node = &GAME_FACTORY_GRAPH[8];
         assert_eq!(resolve_dependencies(item_node, &duplicate_kind).unwrap()[0].id, "new");
         assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Quality,WorkflowStage::Quality]),Err(WorkflowError::DuplicateStage));}
+ 
+ #[test]
+ fn franchise_pipeline_is_deterministic_and_fail_closed() {
+     let mut core = FranchiseFactoryCore::new("1.0.0");
+     let blueprint = FranchiseBlueprint {
+         name:"Genesis".into(), genre:"Action".into(), target_audience:"General".into(),
+         world_count:1, character_count:2, quest_count:3, economy_model:"fixed".into(),
+         monetization:vec!["premium".into()], platforms:vec!["pc".into()]
+     };
+     let id = core.create_franchise(blueprint, Some(0.0)).unwrap();
+     assert_eq!(id, "0b6f6f9f0b1d2a1e".to_string());
+     core.pipeline[1].enabled = false;
+     core.run_pipeline(&id, None).unwrap();
+     assert!(core.pipeline.iter().any(|s| s.status == PipelineStatus::Skipped));
+     assert_eq!(core.franchises[&id].progress, 1.0);
+     assert_eq!(core.franchises[&id].factories_used.len(), 9);
+     assert!(core.events.iter().any(|e| e.starts_with("PipelineComplete:")));
+     core.reset_pipeline();
+     assert!(core.pipeline.iter().all(|s| s.status == PipelineStatus::Pending));
+ }
+
+ fn failing_executor(stage:&PipelineStage, _franchise:&Franchise) -> StageResult {
+     if stage.name == "Quest" { StageResult { success:false, note:"forced failure".into() } }
+     else { StageResult::dry_run() }
+ }
+
+ #[test]
+ fn franchise_pipeline_failure_resets_running_state() {
+     let mut core = FranchiseFactoryCore::new("1.0.0");
+     let id = core.create_franchise(FranchiseBlueprint {
+         name:"Failure".into(), genre:"Test".into(), target_audience:"Test".into(),
+         world_count:1, character_count:0, quest_count:0, economy_model:"".into(),
+         monetization:vec![], platforms:vec![]
+     }, Some(0.0)).unwrap();
+     let err = core.run_pipeline(&id, Some(failing_executor)).unwrap_err();
+     assert!(err.contains("Quest"));
+     assert!(!core.pipeline_running);
+     assert!(core.events.iter().any(|e| e.contains("StageFailed")));
+ }
+
+ #[test]
+ fn lifecycle_manager_matches_reference_defaults() {
+     let mut manager = LifecycleManager::new();
+     assert_eq!(manager.templates.len(), 12);
+     let id = manager.register("Genesis", 100, 10.0, Some(0.0)).unwrap();
+     assert_eq!(id, "d4c2f4b5f4f3c7f7");
+     assert!(manager.transition(&id, LifecyclePhase::Concept, "system", "", Some(1.0)).is_ok());
+     assert!(matches!(
+         manager.transition(&id, LifecyclePhase::Production, "system", "", Some(2.0)),
+         Err(LifecycleManagerError::InvalidTransition{..})
+     ));
+     let mid = manager.add_milestone(&id, "Slice", LifecyclePhase::Prototype, 2, vec!["Playable".into()]).unwrap();
+     manager.achieve_milestone(&mid, 2, vec!["Playable".into()]).unwrap();
+     assert_eq!(manager.milestones[&mid].status, MilestoneStatus::Achieved);
+     let health=manager.health(&id).unwrap();
+     assert_eq!(health.3, 0.0);
+ }
  #[test]fn lifecycle_is_sequential_or_archive(){assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Concept).is_ok());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Production).is_err());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Archived).is_ok());
         let a=ArtifactEnvelope{reference:ArtifactRef{id:"x".into(),kind:ArtifactKind::Item,version:"1.0.0".into(),producer:"factory".into(),content_hash:None},dependencies:vec![],evidence:vec![]};
         validate_artifact(&a).unwrap();}
