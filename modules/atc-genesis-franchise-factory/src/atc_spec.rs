@@ -50,6 +50,7 @@ pub enum SpecError {
     AdFilenameMismatch { header: u16, filename: u16 },
     DuplicateAdId(u16),
     NonCanonicalAdRange { ad_id: u16 },
+    MissingCanonicalAdId { ad_id: u16 },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -415,6 +416,23 @@ where
     Ok(parsed)
 }
 
+pub fn validate_canonical_spec_set<'a, I>(specs: I) -> Result<Vec<AtcSpec>, SpecError>
+where
+    I: IntoIterator<Item = (&'a str, &'a str)>,
+{
+    let parsed = validate_spec_set(specs)?;
+    for ad_id in 20..=43 {
+        if !parsed.iter().any(|spec| spec.ad_id == ad_id) {
+            return Err(SpecError::MissingCanonicalAdId { ad_id });
+        }
+    }
+    if parsed.len() != 24 {
+        return Err(SpecError::MissingCanonicalAdId { ad_id: 43 });
+    }
+    Ok(parsed)
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -511,6 +529,26 @@ pub fn run(core: Core) -> Bool { return true }
             validate_spec_set([a, b]),
             Err(SpecError::DuplicateAdId(20))
         );
+    }
+
+    #[test]
+    fn rejects_incomplete_canonical_set() {
+        assert_eq!(
+            validate_canonical_spec_set([("test_factory_ad20.atc", VALID)]),
+            Err(SpecError::MissingCanonicalAdId { ad_id: 21 })
+        );
+    }
+
+    #[test]
+    fn accepts_complete_canonical_ad_set() {
+        let sources: Vec<(String, String)> = (20..=43).map(|id| {
+            (format!("test_factory_ad{id}.atc"), VALID.replace("AD-20", &format!("AD-{id}")))
+        }).collect();
+        let refs: Vec<(&str, &str)> = sources.iter().map(|(f, s)| (f.as_str(), s.as_str())).collect();
+        let parsed = validate_canonical_spec_set(refs).unwrap();
+        assert_eq!(parsed.len(), 24);
+        assert_eq!(parsed.first().unwrap().ad_id, 20);
+        assert_eq!(parsed.last().unwrap().ad_id, 43);
     }
 
     #[test]
