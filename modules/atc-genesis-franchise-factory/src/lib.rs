@@ -478,11 +478,11 @@ mod workflow_conformance_tests {
 }
 
 #[cfg(test)]
-mod workflow_conformance_tests {
+mod workflow_registry_negative_tests {
  use super::*;
  #[test] fn default_workflows_are_valid() {
   let defs=default_workflows();
-  assert_eq!(defs.len(),6);
+  assert_eq!(defs.len(),17);
   let registry=WorkflowRegistry::new(defs).unwrap();
   assert_eq!(registry.get("franchise").unwrap().outputs,vec!["franchise-package","operating-model","replication-plan"]);
  }
