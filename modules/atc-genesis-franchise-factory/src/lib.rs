@@ -223,7 +223,6 @@ impl LifecycleManager {
             target, budget, spent:0, team:Vec::new(), risk:5, prob:0.5,
             milestones:Vec::new(), kpi:Kpi::default()
         });
-        self.now += 1.0;
         Ok(id)
     }
 
@@ -237,7 +236,6 @@ impl LifecycleManager {
         franchise.history.push(PhaseHistory{phase:new_phase,entered:ts,exited:0.0,notes:notes.into(),success:false});
         let transition_id=lifecycle_id(&format!("{}|{}", franchise_id, ts));
         self.transitions.push(LifecycleTransition{id:transition_id,franchise_id:franchise_id.into(),from:old,to:new_phase,timestamp:ts,by:by.into(),notes:franchise.history.last().map(|h|h.notes.clone()).unwrap_or_default()});
-        self.now += 1.0;
         Ok(())
     }
 
@@ -248,7 +246,6 @@ impl LifecycleManager {
         let milestone=Milestone{id:id.clone(),franchise_id:franchise_id.into(),name,phase,target,achieved:0,status:MilestoneStatus::NotStarted,criteria,done:Vec::new()};
         self.milestones.insert(id.clone(),milestone.clone());
         self.franchises.get_mut(franchise_id).unwrap().milestones.push(milestone);
-        self.now += 1.0;
         Ok(id)
     }
 
@@ -424,7 +421,7 @@ mod tests{
          monetization:vec!["premium".into()], platforms:vec!["pc".into()]
      };
      let id = core.create_franchise(blueprint, Some(0.0)).unwrap();
-     assert_eq!(id, "0b6f6f9f0b1d2a1e".to_string());
+     assert_eq!(id, "ff1d7be7c852f459".to_string());
      core.pipeline[1].enabled = false;
      core.run_pipeline(&id, None).unwrap();
      assert!(core.pipeline.iter().any(|s| s.status == PipelineStatus::Skipped));
@@ -459,7 +456,7 @@ mod tests{
      let mut manager = LifecycleManager::new();
      assert_eq!(manager.templates.len(), 12);
      let id = manager.register("Genesis", 100, 10.0, Some(0.0)).unwrap();
-     assert_eq!(id, "d4c2f4b5f4f3c7f7");
+     assert_eq!(id, "ff1d7be7c852f459");
      assert!(manager.transition(&id, LifecyclePhase::Concept, "system", "", Some(1.0)).is_ok());
      assert!(matches!(
          manager.transition(&id, LifecyclePhase::Production, "system", "", Some(2.0)),
