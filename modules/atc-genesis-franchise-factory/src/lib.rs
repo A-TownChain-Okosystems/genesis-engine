@@ -245,7 +245,7 @@ impl LifecycleManager {
         let id=lifecycle_id(&format!("{}|{}", name, self.now));
         let milestone=Milestone{id:id.clone(),franchise_id:franchise_id.into(),name,phase,target,achieved:0,status:MilestoneStatus::NotStarted,criteria,done:Vec::new()};
         self.milestones.insert(id.clone(),milestone.clone());
-        self.franchises.get_mut(franchise_id).unwrap().milestones.push(milestone);
+        self.franchises.get_mut(franchise_id).unwrap().milestones.push(id.clone());
         Ok(id)
     }
 
