@@ -151,7 +151,7 @@ pub struct LifecycleFranchise {
     pub id: String, pub name: String, pub phase: LifecyclePhase,
     pub history: Vec<PhaseHistory>, pub start: f64, pub target: f64,
     pub budget: u64, pub spent: u64, pub team: Vec<String>, pub risk: u8,
-    pub prob: f64, pub milestones: Vec<Milestone>, pub kpi: Kpi,
+    pub prob: f64, pub milestones: Vec<String>, pub kpi: Kpi,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -296,27 +296,39 @@ pub struct Franchise {
     pub id:String, pub name:String, pub universe:String, pub status:FranchiseStatus,
     pub created_at:f64, pub blueprint:FranchiseBlueprint, pub factories_used:Vec<String>, pub progress:f64
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GffEvent {
+    pub event: String,
+    pub ts: u64,
+    pub fid: Option<String>,
+    pub name: Option<String>,
+    pub stage: Option<String>,
+    pub note: Option<String>,
+    pub progress: Option<u32>,
+}
+
 pub struct FranchiseFactoryCore {
     pub version:String, pub initialized:bool, pub franchises:std::collections::BTreeMap<String,Franchise>,
     pub active_franchise:Option<String>, pub pipeline:Vec<PipelineStage>, pub pipeline_running:bool,
-    pub events:Vec<String>, event_clock:f64
+    pub events:Vec<GffEvent>, event_clock:u64
 }
 impl FranchiseFactoryCore {
     pub fn new(version:impl Into<String>)->Self {
         let version=version.into();
         Self { version:version.clone(), initialized:true, franchises:std::collections::BTreeMap::new(),
             active_franchise:None, pipeline:default_pipeline(), pipeline_running:false,
-            events:vec![format!("GFFInitialized:{}",version)], event_clock:1.0 }
+            events:vec![GffEvent{event:"GFFInitialized".into(),ts:0,fid:None,name:None,stage:None,note:None,progress:None}], event_clock:1 }
     }
     pub fn create_franchise(&mut self, blueprint:FranchiseBlueprint, now:Option<f64>)->Result<String,&'static str> {
         if blueprint.name.is_empty(){return Err("blueprint.name darf nicht leer sein");}
-        let ts=now.unwrap_or(self.event_clock);
+        let ts=now.unwrap_or(self.event_clock as f64);
         let id={ let mut h=sha2::Sha256::new(); h.update(format!("{}|{}",blueprint.name,ts).as_bytes()); h.finalize().iter().take(8).map(|b| format!("{:02x}",b)).collect::<String>() };
         self.franchises.insert(id.clone(),Franchise{id:id.clone(),name:blueprint.name.clone(),
             universe:format!("{} Universe",blueprint.name),status:FranchiseStatus::Concept,created_at:ts,
             blueprint,factories_used:Vec::new(),progress:0.0});
-        self.active_franchise=Some(id.clone()); self.events.push(format!("FranchiseCreated:{}:{}",id,self.franchises[&id].name));
-        self.event_clock+=1.0; Ok(id)
+        self.active_franchise=Some(id.clone());
+        self.events.push(GffEvent{event:"FranchiseCreated".into(),ts:self.event_clock,fid:Some(id.clone()),name:Some(blueprint.name.clone()),stage:None,note:None,progress:None});
+        self.event_clock+=1; Ok(id)
     }
     pub fn reset_pipeline(&mut self){for s in &mut self.pipeline{s.status=PipelineStatus::Pending;}}
 }
@@ -338,55 +350,45 @@ fn noop_executor(_stage: &PipelineStage, _franchise: &Franchise) -> StageResult 
 
 impl FranchiseFactoryCore {
     pub fn run_pipeline(&mut self, franchise_id: &str, executor: Option<StageExecutor>) -> Result<(), String> {
-        if !self.franchises.contains_key(franchise_id) {
-            return Err(format!("unknown franchise: {}", franchise_id));
-        }
-        if self.pipeline_running {
-            return Err("pipeline already running".into());
-        }
+        if !self.franchises.contains_key(franchise_id) { return Err(format!("Franchise {} nicht gefunden", franchise_id)); }
+        if self.pipeline_running { return Err("Pipeline laeuft bereits (pipeline_running)".into()); }
         self.pipeline_running = true;
-        self.events.push(format!("PipelineStarted:{}", franchise_id));
+        self.events.push(GffEvent{event:"PipelineStarted".into(),ts:self.event_clock,fid:Some(franchise_id.into()),name:None,stage:None,note:None,progress:None});
+        self.event_clock += 1;
         let result = (|| {
+            let total = self.pipeline.iter().filter(|s| s.enabled).count();
+            let mut done = 0usize;
             let mut stages = self.pipeline.clone();
             stages.sort_by_key(|s| s.order);
-            let total = stages.len();
-            let mut done = 0usize;
             for stage in stages {
                 if !stage.enabled {
-                    if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
-                        current.status = PipelineStatus::Skipped;
-                    }
-                    done += 1;
+                    if let Some(current)=self.pipeline.iter_mut().find(|s| s.order==stage.order) { current.status=PipelineStatus::Skipped; }
                     continue;
                 }
-                if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
-                    current.status = PipelineStatus::InProgress;
-                }
-                let franchise = self.franchises.get(franchise_id).cloned().expect("validated above");
-                let outcome = executor.unwrap_or(noop_executor)(&stage, &franchise);
+                if let Some(current)=self.pipeline.iter_mut().find(|s| s.order==stage.order) { current.status=PipelineStatus::InProgress; }
+                let franchise=self.franchises.get(franchise_id).cloned().expect("validated above");
+                let outcome=executor.unwrap_or(noop_executor)(&stage,&franchise);
                 if !outcome.success {
-                    self.events.push(format!("StageFailed:{}:{}:{}", franchise_id, stage.name, outcome.note));
-                    return Err(format!("pipeline stage failed: {}", stage.name));
+                    self.events.push(GffEvent{event:"StageFailed".into(),ts:self.event_clock,fid:Some(franchise_id.into()),name:None,stage:Some(stage.name.clone()),note:Some(outcome.note),progress:None});
+                    self.event_clock += 1;
+                    return Err(format!("Stage {} fehlgeschlagen",stage.name));
                 }
-                if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
-                    current.status = PipelineStatus::Complete;
-                }
-                if let Some(franchise) = self.franchises.get_mut(franchise_id) {
-                    if !franchise.factories_used.contains(&stage.factory) {
-                        franchise.factories_used.push(stage.factory.clone());
-                    }
+                if let Some(current)=self.pipeline.iter_mut().find(|s| s.order==stage.order) { current.status=PipelineStatus::Complete; }
+                if let Some(franchise)=self.franchises.get_mut(franchise_id) {
+                    if !franchise.factories_used.contains(&stage.factory) { franchise.factories_used.push(stage.factory.clone()); }
                     done += 1;
-                    franchise.progress = ((done as f64 / total.max(1) as f64) * 10000.0).round() / 10000.0;
+                    franchise.progress=if total==0 {0.0} else {((done as f64/total as f64)*10000.0).round()/10000.0};
+                    let progress=(franchise.progress*10000.0) as u32;
+                    self.events.push(GffEvent{event:"StageComplete".into(),ts:self.event_clock,fid:Some(franchise_id.into()),name:None,stage:Some(stage.name.clone()),note:None,progress:Some(progress)});
                 }
-                self.events.push(format!("StageComplete:{}:{}", franchise_id, stage.name));
+                self.event_clock += 1;
             }
-            if let Some(franchise) = self.franchises.get_mut(franchise_id) {
-                franchise.progress = 1.0;
-            }
-            self.events.push(format!("PipelineComplete:{}", franchise_id));
+            let progress=self.franchises.get(franchise_id).map(|f|f.progress).unwrap_or(0.0);
+            self.events.push(GffEvent{event:"PipelineComplete".into(),ts:self.event_clock,fid:Some(franchise_id.into()),name:None,stage:None,note:None,progress:Some((progress*10000.0) as u32)});
+            self.event_clock += 1;
             Ok(())
         })();
-        self.pipeline_running = false;
+        self.pipeline_running=false;
         result
     }
 }
@@ -424,7 +426,7 @@ mod tests{
      assert!(core.pipeline.iter().any(|s| s.status == PipelineStatus::Skipped));
      assert_eq!(core.franchises[&id].progress, 1.0);
      assert_eq!(core.franchises[&id].factories_used.len(), 9);
-     assert!(core.events.iter().any(|e| e.starts_with("PipelineComplete:")));
+     assert!(core.events.iter().any(|e| e.event == "PipelineComplete"));
      core.reset_pipeline();
      assert!(core.pipeline.iter().all(|s| s.status == PipelineStatus::Pending));
  }
@@ -445,7 +447,7 @@ mod tests{
      let err = core.run_pipeline(&id, Some(failing_executor)).unwrap_err();
      assert!(err.contains("Quest"));
      assert!(!core.pipeline_running);
-     assert!(core.events.iter().any(|e| e.contains("StageFailed")));
+     assert!(core.events.iter().any(|e| e.event == "StageFailed"));
  }
 
  #[test]
