@@ -443,6 +443,41 @@ pub fn run(core: Core) -> Bool { return true }
     }
 
     #[test]
+    fn captures_typed_fields_and_function_parameters() {
+        let source = VALID.replace(
+            "struct Core { value: UInt64 }",
+            "struct Core { values: List<UInt256>, state: Status }"
+        ).replace(
+            "pub fn init_gff() -> Core { return Core { value: 0 } }",
+            "pub fn init_gff(input: UInt256, state: Status) -> Core { return Core { values: [], state: state } }"
+        );
+        let spec = parse_spec("typed_factory_ad20.atc", &source).unwrap();
+        assert_eq!(spec.struct_definitions[0].fields[0].ty, "List<UInt256>");
+        assert_eq!(spec.struct_definitions[0].fields[1].name, "state");
+        assert_eq!(spec.function_definitions[0].params[0].ty, "UInt256");
+        assert_eq!(spec.function_definitions[0].params[1].ty, "Status");
+        assert_eq!(spec.function_definitions[0].return_type.as_deref(), Some("Core"));
+    }
+
+    #[test]
+    fn rejects_missing_struct_field_type() {
+        let source = VALID.replace("value: UInt64", "value:");
+        assert!(matches!(
+            parse_spec("invalid_field_ad20.atc", &source),
+            Err(SpecError::MissingType { context: "type", .. })
+        ));
+    }
+
+    #[test]
+    fn rejects_invalid_function_signature() {
+        let source = VALID.replace("pub fn run(core: Core) -> Bool", "pub fn run(core Core) -> Bool");
+        assert!(matches!(
+            parse_spec("invalid_fn_ad20.atc", &source),
+            Err(SpecError::InvalidFunctionSignature { .. })
+        ));
+    }
+
+    #[test]
     fn rejects_header_filename_mismatch() {
         assert_eq!(
             parse_spec("test_factory_ad21.atc", VALID),
