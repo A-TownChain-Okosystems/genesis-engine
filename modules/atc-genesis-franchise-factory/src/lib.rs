@@ -139,11 +139,21 @@ pub fn default_workflows()->Vec<WorkflowDefinition>{vec![
  default_workflow(FactoryId::Text,"Text / Content Factory",&["writing","translation","seo"],&["content","localized-content"],"Text and content production."),
  default_workflow(FactoryId::Software,"Software Factory",&["specification","architecture","code","tests","deployment"],&["source","tests","documentation","release"],"Software delivery from idea to deployment."),
  default_workflow(FactoryId::Game,"Game Factory",&["game-design","world","lore","characters","quests","gameplay","assets","ai-npc","testing","liveops"],&["game-bible","game-content","build","liveops-plan"],"End-to-end game production."),
+ default_workflow(FactoryId::Marketing,"Marketing Factory",&["campaigns","ads","landing-pages","experiments","analytics"],&["campaign","creative-plan","report"],"Campaign planning and optimization."),
+ default_workflow(FactoryId::Business,"Business Factory",&["business-model","market-analysis","financial-model","pricing","kpis"],&["business-plan","financial-model","kpi-plan"],"Business model production."),
+ default_workflow(FactoryId::Document,"Document Factory",&["contracts","offers","reports","sops","manuals"],&["documents","document-set"],"Controlled business document production."),
+ default_workflow(FactoryId::Research,"Research Factory",&["research","source-analysis","monitoring","synthesis"],&["research-report","knowledge-update"],"Evidence-oriented research workflows."),
+ default_workflow(FactoryId::Ecommerce,"E-Commerce Factory",&["catalog","product-analysis","pricing","sales-analysis"],&["catalog","product-content","sales-report"],"E-commerce content and operations."),
+ default_workflow(FactoryId::CustomerService,"Customer-Service Factory",&["support","faq","triage","crm","escalation"],&["resolution","faq-update","support-report"],"Customer support automation."),
+ default_workflow(FactoryId::Automation,"Automation Factory",&["triggers","agents","apis","data","notifications"],&["automation","execution-log"],"Event-driven multi-step automation."),
+ default_workflow(FactoryId::Knowledge,"Knowledge Factory",&["ingestion","rag","semantic-search","knowledge-graph","memory"],&["knowledge-base","index","graph"],"Document-to-knowledge transformation."),
+ default_workflow(FactoryId::Agent,"Agent Factory",&["identity","tools","memory","permissions","workflows","agent-messaging"],&["agent-definition","policy","workflow"],"Controlled AI-agent creation."),
  default_workflow(FactoryId::Franchise,"Franchise Factory",&["business-model","brand","product","content","software","marketing","sales","automation","replication"],&["franchise-package","operating-model","replication-plan"],"Replicate a validated business system as a franchise package."),
  default_workflow(FactoryId::Startup,"Startup Factory",&["validation","mvp","branding","product","launch","kpis"],&["startup-package","mvp-plan","launch-plan"],"Startup formation from idea to launch."),
+ default_workflow(FactoryId::Education,"Education Factory",&["curriculum","learning-material","exercises","assessment","tutoring"],&["course","learning-platform-plan","assessment"],"Education product production."),
+ default_workflow(FactoryId::Book,"Book Factory",&["research","outline","writing","editing","layout","translation","publishing"],&["manuscript","book-package","publication-plan"],"Book production and publication."),
  default_workflow(FactoryId::VirtualWorld,"Virtual World Factory",&["world","geography","cities","buildings","npcs","economy","factions","lore","simulation"],&["world-bible","world-data","simulation"],"Persistent virtual-world production."),
 ]}
-
 #[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
 pub enum LifecyclePhase { Idea, Concept, Prototype, PreProd, Production, Alpha, Beta, Release, LiveOps, Expansion, Successor, Archived }
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
