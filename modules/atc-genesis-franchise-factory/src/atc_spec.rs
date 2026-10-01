@@ -10,14 +10,19 @@ const COPYRIGHT_PREFIX: &str = "Copyright (c) 2026";
 const DEFAULT_FORBIDDEN_IMPORTS: &[&str] = &["chronicles"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtcField { pub name: String, pub ty: String }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtcStruct { pub name: String, pub fields: Vec<AtcField> }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtcEnum { pub name: String, pub variants: Vec<String> }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtcFunction { pub name: String, pub params: Vec<AtcField>, pub return_type: Option<String> }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AtcSpec {
-    pub ad_id: u16,
-    pub title: String,
-    pub filename: String,
-    pub imports: Vec<String>,
-    pub structs: Vec<String>,
-    pub enums: Vec<String>,
-    pub functions: Vec<String>,
+    pub ad_id: u16, pub title: String, pub filename: String, pub imports: Vec<String>,
+    pub structs: Vec<String>, pub enums: Vec<String>, pub functions: Vec<String>,
+    pub struct_definitions: Vec<AtcStruct>, pub enum_definitions: Vec<AtcEnum>,
+    pub function_definitions: Vec<AtcFunction>,
 }
 
 impl AtcSpec {
@@ -39,6 +44,9 @@ pub enum SpecError {
     ExpectedIdentifier { offset: usize, context: &'static str },
     DuplicateDeclaration { kind: &'static str, name: String },
     MissingImplementationSurface,
+    MissingType { offset: usize, context: &'static str },
+    InvalidFunctionSignature { offset: usize },
+    InvalidStructBody { offset: usize },
     AdFilenameMismatch { header: u16, filename: u16 },
     DuplicateAdId(u16),
     NonCanonicalAdRange { ad_id: u16 },
@@ -239,57 +247,114 @@ fn parse_import(tokens: &[Token], mut i: usize) -> Result<(String, usize), SpecE
     Ok((path, i))
 }
 
-fn collect_surface(tokens: &[Token]) -> Result<(Vec<String>, Vec<String>, Vec<String>, Vec<String>), SpecError> {
-    let mut imports = Vec::new();
-    let mut structs = Vec::new();
-    let mut enums = Vec::new();
-    let mut functions = Vec::new();
-    let mut seen_structs = BTreeSet::new();
-    let mut seen_enums = BTreeSet::new();
-    let mut seen_functions = BTreeSet::new();
+fn consume_type(tokens: &[Token], mut i: usize) -> Result<(String, usize), SpecError> {
+    let offset = tokens.get(i).map_or(0, |t| t.offset);
+    if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Ident(_))) {
+        return Err(SpecError::MissingType { offset, context: "type" });
+    }
+    let mut ty = String::new();
+    while let Some(t) = tokens.get(i) {
+        match &t.kind {
+            TokenKind::Ident(v) | TokenKind::Number(v) => { ty.push_str(v); i += 1; }
+            TokenKind::Symbol(c) if matches!(c, '<' | '>' | '[' | ']' | ',') => { ty.push(*c); i += 1; }
+            _ => break,
+        }
+    }
+    Ok((ty, i))
+}
 
-    let mut i = 0usize;
+fn parse_struct_definition(tokens: &[Token], mut i: usize) -> Result<(AtcStruct, usize), SpecError> {
+    let name = expect_ident(tokens, i + 1, "struct name")?;
+    i += 2;
+    if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol('{'))) {
+        return Err(SpecError::InvalidStructBody { offset: tokens.get(i).map_or(0, |t| t.offset) });
+    }
+    i += 1;
+    let mut fields = Vec::new();
+    while i < tokens.len() && !matches!(tokens[i].kind, TokenKind::Symbol('}')) {
+        let field = expect_ident(tokens, i, "struct field name")?;
+        if !matches!(tokens.get(i + 1).map(|t| &t.kind), Some(TokenKind::Symbol(':'))) {
+            return Err(SpecError::InvalidStructBody { offset: tokens.get(i).map_or(0, |t| t.offset) });
+        }
+        let (ty, next) = consume_type(tokens, i + 2)?;
+        fields.push(AtcField { name: field, ty });
+        i = next;
+        if matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol(',')) | Some(TokenKind::Symbol(';'))) { i += 1; }
+    }
+    if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol('}'))) {
+        return Err(SpecError::InvalidStructBody { offset: tokens.get(i).map_or(0, |t| t.offset) });
+    }
+    Ok((AtcStruct { name, fields }, i + 1))
+}
+
+fn parse_enum_definition(tokens: &[Token], mut i: usize) -> Result<(AtcEnum, usize), SpecError> {
+    let name = expect_ident(tokens, i + 1, "enum name")?;
+    i += 2;
+    if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol('{'))) {
+        return Err(SpecError::UnexpectedToken { offset: tokens.get(i).map_or(0, |t| t.offset), token: "enum requires body".into() });
+    }
+    i += 1;
+    let mut variants = Vec::new();
+    while i < tokens.len() && !matches!(tokens[i].kind, TokenKind::Symbol('}')) {
+        variants.push(expect_ident(tokens, i, "enum variant")?);
+        i += 1;
+        if matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol(',')) | Some(TokenKind::Symbol(';'))) { i += 1; }
+    }
+    if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol('}'))) {
+        return Err(SpecError::UnexpectedToken { offset: tokens.get(i).map_or(0, |t| t.offset), token: "unterminated enum".into() });
+    }
+    Ok((AtcEnum { name, variants }, i + 1))
+}
+
+fn parse_function_definition(tokens: &[Token], mut i: usize) -> Result<(AtcFunction, usize), SpecError> {
+    let name = expect_ident(tokens, i + 2, "public function name")?;
+    i += 3;
+    if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol('('))) {
+        return Err(SpecError::InvalidFunctionSignature { offset: tokens.get(i).map_or(0, |t| t.offset) });
+    }
+    i += 1;
+    let mut params = Vec::new();
+    while i < tokens.len() && !matches!(tokens[i].kind, TokenKind::Symbol(')')) {
+        let param = expect_ident(tokens, i, "function parameter name")?;
+        if !matches!(tokens.get(i + 1).map(|t| &t.kind), Some(TokenKind::Symbol(':'))) {
+            return Err(SpecError::InvalidFunctionSignature { offset: tokens.get(i).map_or(0, |t| t.offset) });
+        }
+        let (ty, next) = consume_type(tokens, i + 2)?;
+        params.push(AtcField { name: param, ty });
+        i = next;
+        if matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol(','))) { i += 1; }
+    }
+    if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol(')'))) {
+        return Err(SpecError::InvalidFunctionSignature { offset: tokens.get(i).map_or(0, |t| t.offset) });
+    }
+    i += 1;
+    let return_type = if matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol('-')))
+        && matches!(tokens.get(i + 1).map(|t| &t.kind), Some(TokenKind::Symbol('>'))) {
+        let (ty, next) = consume_type(tokens, i + 2)?;
+        i = next;
+        Some(ty)
+    } else { None };
+    Ok((AtcFunction { name, params, return_type }, i))
+}
+
+fn collect_surface(tokens: &[Token]) -> Result<(Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<AtcStruct>, Vec<AtcEnum>, Vec<AtcFunction>), SpecError> {
+    let mut imports = Vec::new(); let mut structs = Vec::new(); let mut enums = Vec::new(); let mut functions = Vec::new();
+    let mut struct_definitions = Vec::new(); let mut enum_definitions = Vec::new(); let mut function_definitions = Vec::new();
+    let mut seen_structs = BTreeSet::new(); let mut seen_enums = BTreeSet::new(); let mut seen_functions = BTreeSet::new();
+    let mut i = 0;
     while i < tokens.len() {
-        let TokenKind::Ident(keyword) = &tokens[i].kind else {
-            i += 1;
-            continue;
-        };
-
+        let TokenKind::Ident(keyword) = &tokens[i].kind else { i += 1; continue };
         match keyword.as_str() {
-            "import" => {
-                let (path, next) = parse_import(tokens, i + 1)?;
-                imports.push(path);
-                i = next;
-            }
-            "struct" => {
-                let name = expect_ident(tokens, i + 1, "struct name")?;
-                if !seen_structs.insert(name.clone()) {
-                    return Err(SpecError::DuplicateDeclaration { kind: "struct", name });
-                }
-                structs.push(name);
-                i += 2;
-            }
-            "enum" => {
-                let name = expect_ident(tokens, i + 1, "enum name")?;
-                if !seen_enums.insert(name.clone()) {
-                    return Err(SpecError::DuplicateDeclaration { kind: "enum", name });
-                }
-                enums.push(name);
-                i += 2;
-            }
+            "import" => { let (path, next) = parse_import(tokens, i + 1)?; imports.push(path); i = next; }
+            "struct" => { let (def, next) = parse_struct_definition(tokens, i)?; if !seen_structs.insert(def.name.clone()) { return Err(SpecError::DuplicateDeclaration { kind: "struct", name: def.name }); } structs.push(def.name.clone()); struct_definitions.push(def); i = next; }
+            "enum" => { let (def, next) = parse_enum_definition(tokens, i)?; if !seen_enums.insert(def.name.clone()) { return Err(SpecError::DuplicateDeclaration { kind: "enum", name: def.name }); } enums.push(def.name.clone()); enum_definitions.push(def); i = next; }
             "pub" if matches!(tokens.get(i + 1).map(|t| &t.kind), Some(TokenKind::Ident(v)) if v == "fn") => {
-                let name = expect_ident(tokens, i + 2, "public function name")?;
-                if !seen_functions.insert(name.clone()) {
-                    return Err(SpecError::DuplicateDeclaration { kind: "function", name });
-                }
-                functions.push(name);
-                i += 3;
+                let (def, next) = parse_function_definition(tokens, i)?; if !seen_functions.insert(def.name.clone()) { return Err(SpecError::DuplicateDeclaration { kind: "function", name: def.name }); } functions.push(def.name.clone()); function_definitions.push(def); i = next;
             }
             _ => i += 1,
         }
     }
-
-    Ok((imports, structs, enums, functions))
+    Ok((imports, structs, enums, functions, struct_definitions, enum_definitions, function_definitions))
 }
 
 pub fn parse_spec(filename: &str, source: &str) -> Result<AtcSpec, SpecError> {
@@ -308,7 +373,7 @@ pub fn parse_spec(filename: &str, source: &str) -> Result<AtcSpec, SpecError> {
     }
 
     let tokens = lex(source)?;
-    let (imports, structs, enums, functions) = collect_surface(&tokens)?;
+    let (imports, structs, enums, functions, struct_definitions, enum_definitions, function_definitions) = collect_surface(&tokens)?;
 
     for import in &imports {
         for forbidden in DEFAULT_FORBIDDEN_IMPORTS {
@@ -321,7 +386,7 @@ pub fn parse_spec(filename: &str, source: &str) -> Result<AtcSpec, SpecError> {
         }
     }
 
-    let spec = AtcSpec { ad_id, title, filename: filename.into(), imports, structs, enums, functions };
+    let spec = AtcSpec { ad_id, title, filename: filename.into(), imports, structs, enums, functions, struct_definitions, enum_definitions, function_definitions };
     if !spec.has_implementation_surface() {
         return Err(SpecError::MissingImplementationSurface);
     }
@@ -373,6 +438,8 @@ pub fn run(core: Core) -> Bool { return true }
         assert_eq!(spec.enums, vec!["Status"]);
         assert_eq!(spec.functions, vec!["init_gff", "run"]);
         assert!(spec.has_implementation_surface());
+        assert_eq!(spec.struct_definitions[0].fields[0].ty, "UInt64");
+        assert_eq!(spec.function_definitions[0].return_type.as_deref(), Some("Core"));
     }
 
     #[test]
