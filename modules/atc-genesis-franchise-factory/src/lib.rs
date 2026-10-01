@@ -111,6 +111,60 @@ pub enum LifecycleError { InvalidTransition{from:LifecyclePhase,to:LifecyclePhas
 pub fn valid_transition(from:LifecyclePhase,to:LifecyclePhase)->bool{to==LifecyclePhase::Archived || (from as u8).checked_add(1).is_some_and(|n|n==to as u8)}
 pub fn transition(from:LifecyclePhase,to:LifecyclePhase)->Result<LifecyclePhase,LifecycleError>{if valid_transition(from,to){Ok(to)}else{Err(LifecycleError::InvalidTransition{from,to})}}
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FranchiseStatus { Concept, InProduction, Testing, Live, Expanding, Archived }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PipelineStatus { Pending, InProgress, Complete, Skipped }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PipelineStage { pub name: String, pub factory: String, pub order: u32, pub enabled: bool, pub status: PipelineStatus }
+
+pub fn default_pipeline() -> Vec<PipelineStage> {
+    [
+        ("Blueprint","ip_factory"),("World","world_factory"),("Character","character_factory"),
+        ("Lore","lore_factory"),("Quest","quest_factory"),("Asset","ai_content_factory"),
+        ("Game","world_factory"),("Testing","analytics_factory"),("LiveOps","liveops_factory"),
+        ("Merchandise","merchandise_factory")
+    ].into_iter().enumerate().map(|(i,(name,factory))| PipelineStage {
+        name:name.into(), factory:factory.into(), order:i as u32, enabled:true, status:PipelineStatus::Pending
+    }).collect()
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FranchiseBlueprint {
+    pub name:String, pub genre:String, pub target_audience:String, pub world_count:u32,
+    pub character_count:u32, pub quest_count:u32, pub economy_model:String,
+    pub monetization:Vec<String>, pub platforms:Vec<String>
+}
+#[derive(Debug, Clone, PartialEq)]
+pub struct Franchise {
+    pub id:String, pub name:String, pub universe:String, pub status:FranchiseStatus,
+    pub created_at:f64, pub blueprint:FranchiseBlueprint, pub factories_used:Vec<String>, pub progress:f64
+}
+pub struct FranchiseFactoryCore {
+    pub version:String, pub initialized:bool, pub franchises:std::collections::BTreeMap<String,Franchise>,
+    pub active_franchise:Option<String>, pub pipeline:Vec<PipelineStage>, pub pipeline_running:bool,
+    pub events:Vec<String>, event_clock:f64
+}
+impl FranchiseFactoryCore {
+    pub fn new(version:impl Into<String>)->Self {
+        let version=version.into();
+        Self { version:version.clone(), initialized:true, franchises:std::collections::BTreeMap::new(),
+            active_franchise:None, pipeline:default_pipeline(), pipeline_running:false,
+            events:vec![format!("GFFInitialized:{}",version)], event_clock:1.0 }
+    }
+    pub fn create_franchise(&mut self, blueprint:FranchiseBlueprint, now:Option<f64>)->Result<String,&'static str> {
+        if blueprint.name.is_empty(){return Err("blueprint.name darf nicht leer sein");}
+        let ts=now.unwrap_or(self.event_clock);
+        let id=format!("{:016x}", fxhash::hash64(format!("{}|{}",blueprint.name,ts).as_bytes()));
+        self.franchises.insert(id.clone(),Franchise{id:id.clone(),name:blueprint.name.clone(),
+            universe:format!("{} Universe",blueprint.name),status:FranchiseStatus::Concept,created_at:ts,
+            blueprint,factories_used:Vec::new(),progress:0.0});
+        self.active_franchise=Some(id.clone()); self.events.push(format!("FranchiseCreated:{}:{}",id,self.franchises[&id].name));
+        self.event_clock+=1.0; Ok(id)
+    }
+    pub fn reset_pipeline(&mut self){for s in &mut self.pipeline{s.status=PipelineStatus::Pending;}}
+}
+
 #[cfg(test)]
 mod tests{
  use super::*;
