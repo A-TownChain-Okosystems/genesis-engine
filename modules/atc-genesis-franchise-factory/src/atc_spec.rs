@@ -317,12 +317,15 @@ fn parse_function_definition(tokens: &[Token], mut i: usize) -> Result<(AtcFunct
     let mut params = Vec::new();
     while i < tokens.len() && !matches!(tokens[i].kind, TokenKind::Symbol(')')) {
         let param = expect_ident(tokens, i, "function parameter name")?;
-        if !matches!(tokens.get(i + 1).map(|t| &t.kind), Some(TokenKind::Symbol(':'))) {
-            return Err(SpecError::InvalidFunctionSignature { offset: tokens.get(i).map_or(0, |t| t.offset) });
-        }
-        let (ty, next) = consume_type(tokens, i + 2)?;
+        i += 1;
+        let ty = if matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol(':'))) {
+            let (ty, next) = consume_type(tokens, i + 1)?;
+            i = next;
+            ty
+        } else {
+            String::new()
+        };
         params.push(AtcField { name: param, ty });
-        i = next;
         if matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol(','))) { i += 1; }
     }
     if !matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol(')'))) {
@@ -335,6 +338,25 @@ fn parse_function_definition(tokens: &[Token], mut i: usize) -> Result<(AtcFunct
         i = next;
         Some(ty)
     } else { None };
+    if matches!(tokens.get(i).map(|t| &t.kind), Some(TokenKind::Symbol('{'))) {
+        let mut depth = 0usize;
+        while i < tokens.len() {
+            match tokens[i].kind {
+                TokenKind::Symbol('{') => depth += 1,
+                TokenKind::Symbol('}') => {
+                    depth = depth.saturating_sub(1);
+                    i += 1;
+                    if depth == 0 { break; }
+                    continue;
+                }
+                _ => {}
+            }
+            i += 1;
+        }
+        if depth != 0 {
+            return Err(SpecError::InvalidFunctionSignature { offset: tokens.last().map_or(0, |t| t.offset) });
+        }
+    }
     Ok((AtcFunction { name, params, return_type }, i))
 }
 
