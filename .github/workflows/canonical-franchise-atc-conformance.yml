@@ -28,6 +28,9 @@ jobs:
           echo "GENESIS_ENGINE_SHA=$(git rev-parse HEAD)"
           echo "ECOSYSTEM_SHA=$(git -C a-townchain-ecosystem rev-parse HEAD)"
 
+      - name: Generate reproducible workspace lockfile
+        run: cargo generate-lockfile
+
       - name: Rust canonical AD-20..AD-43 conformance
         env:
           ATC_CANONICAL_FRANCHISE_SPEC_ROOT: ${{ github.workspace }}/a-townchain-ecosystem/components/a-townchain-os-docs/wiki/kai-os/modules/franchise
