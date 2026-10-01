@@ -1,4 +1,4 @@
-use atc_genesis_franchise_factory::{canonical_ad_filename, validate_canonical_spec_set, AtcSpec};
+use atc_genesis_franchise_factory::{canonical_ad_filename, validate_canonical_spec_set};
 
 use std::{env, fs, path::PathBuf};
 
