@@ -154,6 +154,30 @@ pub fn default_workflows()->Vec<WorkflowDefinition>{vec![
  default_workflow(FactoryId::Book,"Book Factory",&["research","outline","writing","editing","layout","translation","publishing"],&["manuscript","book-package","publication-plan"],"Book production and publication."),
  default_workflow(FactoryId::VirtualWorld,"Virtual World Factory",&["world","geography","cities","buildings","npcs","economy","factions","lore","simulation"],&["world-bible","world-data","simulation"],"Persistent virtual-world production."),
 ]}
+/// Canonical Game Factory subsystem capability matrix, matching the reference contract.
+pub fn game_subsystems() -> BTreeMap<&'static str, &'static [&'static str]> {
+ let mut m=BTreeMap::new();
+ m.insert("concept",&["genre","target","platforms","usp","core-loop","modes","monetization","technical-requirements"][..]);
+ m.insert("world",&["continents","regions","biomes","cities","dungeons","buildings","climate","day-night","weather","portals"][..]);
+ m.insert("lore",&["origin","peoples","factions","wars","timeline","secrets","canon","artifacts"][..]);
+ m.insert("character",&["player","npc","classes","attributes","skills","progression","relationships"][..]);
+ m.insert("creature",&["anatomy","abilities","weaknesses","attacks","movement","loot","variants","boss-mechanics"][..]);
+ m.insert("combat",&["melee","ranged","magic","combos","dodge","parry","status","boss-phases","pvp-balance"][..]);
+ m.insert("quest",&["main","side","faction","events","puzzles","boss","hidden","dynamic"][..]);
+ m.insert("level",&["terrain","rooms","paths","encounters","loot","checkpoints","puzzles","secrets","scaling"][..]);
+ m.insert("item",&["weapons","armor","accessories","consumables","resources","relics","artifacts","skins","crafting"][..]);
+ m.insert("weapon",&["concept","design","3d","animation","vfx","sound","gameplay"][..]);
+ m.insert("animation",&["idle","walk","run","jump","attack","combo","hit","death","emotes","interactions"][..]);
+ m.insert("ai-npc",&["identity","memory","personality","goals","knowledge","behavior","routine","relationships"][..]);
+ m.insert("audio",&["sfx","voice","ambient","music","dynamic-music","spatial-audio"][..]);
+ m.insert("vfx",&["fire","water","explosions","magic","energy","portals","weather","abilities","boss-effects"][..]);
+ m.insert("economy",&["loot","resources","crafting","pricing","demand","inflation","progression","rewards"][..]);
+ m.insert("multiplayer",&["matchmaking","lobby","party","guilds","pvp","pve","raids","leaderboards","seasons","server"][..]);
+ m.insert("testing",&["bugs","exploits","levels","combat","quests","economy","performance","network","ui","progression","ai-playtests"][..]);
+ m.insert("liveops",&["telemetry","retention","funnel","balance","bugs","seasons","events","content"][..]);
+ m
+}
+
 #[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
 pub enum LifecyclePhase { Idea, Concept, Prototype, PreProd, Production, Alpha, Beta, Release, LiveOps, Expansion, Successor, Archived }
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
