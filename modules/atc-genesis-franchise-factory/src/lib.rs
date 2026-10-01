@@ -1738,10 +1738,10 @@ mod workflow_registry_negative_tests {
             outputs: vec![],
             description: String::new(),
         };
-        assert_eq!(
+        assert!(matches!(
             WorkflowRegistry::new(vec![d]),
             Err(WorkflowRegistryError::MustStartWithInput)
-        );
+        ));
     }
 }
 
