@@ -1,3 +1,4 @@
+use sha2::{Digest, Sha256};
 //! Canonical Rust core for the Genesis Franchise Factory.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -155,7 +156,7 @@ impl FranchiseFactoryCore {
     pub fn create_franchise(&mut self, blueprint:FranchiseBlueprint, now:Option<f64>)->Result<String,&'static str> {
         if blueprint.name.is_empty(){return Err("blueprint.name darf nicht leer sein");}
         let ts=now.unwrap_or(self.event_clock);
-        let id=format!("{:016x}", fxhash::hash64(format!("{}|{}",blueprint.name,ts).as_bytes()));
+        let id={ let mut h=sha2::Sha256::new(); h.update(format!("{}|{}",blueprint.name,ts).as_bytes()); h.finalize().iter().take(8).map(|b| format!("{:02x}",b)).collect::<String>() };
         self.franchises.insert(id.clone(),Franchise{id:id.clone(),name:blueprint.name.clone(),
             universe:format!("{} Universe",blueprint.name),status:FranchiseStatus::Concept,created_at:ts,
             blueprint,factories_used:Vec::new(),progress:0.0});
