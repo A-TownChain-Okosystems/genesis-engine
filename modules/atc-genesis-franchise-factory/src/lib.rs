@@ -1,8 +1,8 @@
+//! Canonical Rust core for the Genesis Franchise Factory.
+
 pub mod atc_spec;
 
 pub use atc_spec::{canonical_ad_filename, parse_spec, validate_canonical_spec_set, validate_spec_set, AtcSpec, SpecError, CANONICAL_AD_FILES};
-
-//! Canonical Rust core for the Genesis Franchise Factory.
 
 use sha2::{Digest, Sha256};
 
@@ -330,9 +330,6 @@ impl LifecycleManager {
         milestone.achieved=achieved;
         milestone.done=done;
         milestone.status=if achieved >= milestone.target { MilestoneStatus::Achieved } else { MilestoneStatus::InProgress };
-        if let Some(franchise)=self.franchises.get_mut(&milestone.franchise_id) {
-            if let Some(copy)=franchise.milestones.iter_mut().find(|m|m.id==milestone_id) { *copy=milestone.clone(); }
-        }
         Ok(())
     }
 
@@ -399,11 +396,12 @@ impl FranchiseFactoryCore {
         if blueprint.name.is_empty(){return Err("blueprint.name darf nicht leer sein");}
         let ts=now.unwrap_or(self.event_clock as f64);
         let id={ let mut h=sha2::Sha256::new(); h.update(format!("{}|{}",blueprint.name,ts).as_bytes()); h.finalize().iter().take(8).map(|b| format!("{:02x}",b)).collect::<String>() };
-        self.franchises.insert(id.clone(),Franchise{id:id.clone(),name:blueprint.name.clone(),
-            universe:format!("{} Universe",blueprint.name),status:FranchiseStatus::Concept,created_at:ts,
+        let blueprint_name=blueprint.name.clone();
+        self.franchises.insert(id.clone(),Franchise{id:id.clone(),name:blueprint_name.clone(),
+            universe:format!("{} Universe",blueprint_name),status:FranchiseStatus::Concept,created_at:ts,
             blueprint,factories_used:Vec::new(),progress:0.0});
         self.active_franchise=Some(id.clone());
-        self.events.push(GffEvent{event:"FranchiseCreated".into(),ts:self.event_clock,fid:Some(id.clone()),name:Some(blueprint.name.clone()),stage:None,note:None,progress:None});
+        self.events.push(GffEvent{event:"FranchiseCreated".into(),ts:self.event_clock,fid:Some(id.clone()),name:Some(blueprint_name),stage:None,note:None,progress:None});
         self.event_clock+=1; Ok(id)
     }
     pub fn reset_pipeline(&mut self){for s in &mut self.pipeline{s.status=PipelineStatus::Pending;}}
