@@ -433,6 +433,21 @@ where
 }
 
 
+pub const CANONICAL_AD_FILES: [&str; 24] = [
+    "gff_core_ad20.atc", "ip_factory_ad21.atc", "world_factory_ad22.atc",
+    "character_factory_ad23.atc", "lore_factory_ad24.atc", "quest_factory_ad25.atc",
+    "economy_factory_ad26.atc", "liveops_factory_ad27.atc", "ai_content_factory_ad28.atc",
+    "merchandise_factory_ad29.atc", "community_factory_ad30.atc", "analytics_factory_ad31.atc",
+    "blueprint_factory_ad32.atc", "canon_engine_ad33.atc", "asset_intelligence_factory_ad34.atc",
+    "gameplay_factory_ad35.atc", "narrative_factory_ad36.atc", "multiplayer_factory_ad37.atc",
+    "creator_factory_ad38.atc", "publishing_factory_ad39.atc", "commerce_factory_ad40.atc",
+    "ai_director_factory_ad41.atc", "security_factory_ad42.atc", "lifecycle_manager_ad43.atc",
+];
+
+pub fn canonical_ad_filename(ad_id: u16) -> Option<&'static str> {
+    CANONICAL_AD_FILES.get(ad_id.checked_sub(20)? as usize).copied()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -529,6 +544,17 @@ pub fn run(core: Core) -> Bool { return true }
             validate_spec_set([a, b]),
             Err(SpecError::DuplicateAdId(20))
         );
+    }
+
+    #[test]
+    fn canonical_filename_registry_is_complete_and_ordered() {
+        assert_eq!(CANONICAL_AD_FILES.len(), 24);
+        for ad_id in 20..=43 {
+            let filename = canonical_ad_filename(ad_id).unwrap();
+            assert!(filename.ends_with(&format!("_ad{ad_id}.atc")));
+        }
+        assert_eq!(canonical_ad_filename(19), None);
+        assert_eq!(canonical_ad_filename(44), None);
     }
 
     #[test]
