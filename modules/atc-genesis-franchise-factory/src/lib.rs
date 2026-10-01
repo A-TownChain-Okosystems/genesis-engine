@@ -1,5 +1,6 @@
-use sha2::{Digest, Sha256};
 //! Canonical Rust core for the Genesis Franchise Factory.
+
+use sha2::{Digest, Sha256};
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -164,6 +165,79 @@ impl FranchiseFactoryCore {
         self.event_clock+=1.0; Ok(id)
     }
     pub fn reset_pipeline(&mut self){for s in &mut self.pipeline{s.status=PipelineStatus::Pending;}}
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StageResult {
+    pub success: bool,
+    pub note: String,
+}
+impl StageResult {
+    pub fn dry_run() -> Self { Self { success: true, note: "dry-run: kein Executor injiziert".into() } }
+}
+
+pub type StageExecutor = fn(&PipelineStage, &Franchise) -> StageResult;
+
+fn noop_executor(_stage: &PipelineStage, _franchise: &Franchise) -> StageResult {
+    StageResult::dry_run()
+}
+
+impl FranchiseFactoryCore {
+    pub fn run_pipeline(&mut self, franchise_id: &str, executor: Option<StageExecutor>) -> Result<(), String> {
+        if !self.franchises.contains_key(franchise_id) {
+            return Err(format!("unknown franchise: {}", franchise_id));
+        }
+        if self.pipeline_running {
+            return Err("pipeline already running".into());
+        }
+        self.pipeline_running = true;
+        self.events.push(format!("PipelineStarted:{}", franchise_id));
+        let result = (|| {
+            let mut stages = self.pipeline.clone();
+            stages.sort_by_key(|s| s.order);
+            let total = stages.len();
+            let mut done = 0usize;
+            for stage in stages {
+                if !stage.enabled {
+                    if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
+                        current.status = PipelineStatus::Skipped;
+                    }
+                    done += 1;
+                    continue;
+                }
+                if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
+                    current.status = PipelineStatus::InProgress;
+                }
+                let franchise = self.franchises.get(franchise_id).cloned().expect("validated above");
+                let outcome = executor.unwrap_or(noop_executor)(&stage, &franchise);
+                if !outcome.success {
+                    if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
+                        current.status = PipelineStatus::Pending;
+                    }
+                    self.events.push(format!("StageFailed:{}:{}:{}", franchise_id, stage.name, outcome.note));
+                    return Err(format!("pipeline stage failed: {}", stage.name));
+                }
+                if let Some(current) = self.pipeline.iter_mut().find(|s| s.order == stage.order) {
+                    current.status = PipelineStatus::Complete;
+                }
+                if let Some(franchise) = self.franchises.get_mut(franchise_id) {
+                    if !franchise.factories_used.contains(&stage.factory) {
+                        franchise.factories_used.push(stage.factory.clone());
+                    }
+                    done += 1;
+                    franchise.progress = ((done as f64 / total.max(1) as f64) * 10000.0).round() / 10000.0;
+                }
+                self.events.push(format!("StageComplete:{}:{}", franchise_id, stage.name));
+            }
+            if let Some(franchise) = self.franchises.get_mut(franchise_id) {
+                franchise.progress = 1.0;
+            }
+            self.events.push(format!("PipelineComplete:{}", franchise_id));
+            Ok(())
+        })();
+        self.pipeline_running = false;
+        result
+    }
 }
 
 #[cfg(test)]
