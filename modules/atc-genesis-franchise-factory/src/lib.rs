@@ -1,0 +1,79 @@
+//! Canonical Rust core for the Genesis Franchise Factory.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ArtifactKind { GameBible, WorldBible, Lore, Character, Creature, Quest, Level, Item, Weapon, Animation, Audio, Vfx, Combat, NpcAi, Economy, Multiplayer, Build, QaReport, LiveOpsPlan }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArtifactRef { pub id: String, pub kind: ArtifactKind, pub version: String, pub producer: String }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GameFactoryNode { pub id: &'static str, pub produces: ArtifactKind, pub requires: &'static [ArtifactKind] }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GraphError { DuplicateNodeId, DuplicateProducer(ArtifactKind), MissingProducer { node: &'static str, kind: ArtifactKind }, DependencyCycle, MissingDependency { node: &'static str, kind: ArtifactKind } }
+
+pub const GAME_FACTORY_GRAPH: &[GameFactoryNode] = &[
+ GameFactoryNode{id:"concept",produces:ArtifactKind::GameBible,requires:&[]},
+ GameFactoryNode{id:"world",produces:ArtifactKind::WorldBible,requires:&[ArtifactKind::GameBible]},
+ GameFactoryNode{id:"lore",produces:ArtifactKind::Lore,requires:&[ArtifactKind::WorldBible]},
+ GameFactoryNode{id:"character",produces:ArtifactKind::Character,requires:&[ArtifactKind::GameBible,ArtifactKind::Lore]},
+ GameFactoryNode{id:"creature",produces:ArtifactKind::Creature,requires:&[ArtifactKind::WorldBible,ArtifactKind::Lore]},
+ GameFactoryNode{id:"combat",produces:ArtifactKind::Combat,requires:&[ArtifactKind::GameBible,ArtifactKind::Character,ArtifactKind::Creature]},
+ GameFactoryNode{id:"quest",produces:ArtifactKind::Quest,requires:&[ArtifactKind::WorldBible,ArtifactKind::Lore,ArtifactKind::Character]},
+ GameFactoryNode{id:"level",produces:ArtifactKind::Level,requires:&[ArtifactKind::WorldBible,ArtifactKind::Quest,ArtifactKind::Creature]},
+ GameFactoryNode{id:"item",produces:ArtifactKind::Item,requires:&[ArtifactKind::GameBible]},
+ GameFactoryNode{id:"weapon",produces:ArtifactKind::Weapon,requires:&[ArtifactKind::Character,ArtifactKind::Combat]},
+ GameFactoryNode{id:"animation",produces:ArtifactKind::Animation,requires:&[ArtifactKind::Character,ArtifactKind::Creature,ArtifactKind::Weapon]},
+ GameFactoryNode{id:"audio",produces:ArtifactKind::Audio,requires:&[ArtifactKind::GameBible,ArtifactKind::Weapon]},
+ GameFactoryNode{id:"vfx",produces:ArtifactKind::Vfx,requires:&[ArtifactKind::Combat,ArtifactKind::Weapon]},
+ GameFactoryNode{id:"ai-npc",produces:ArtifactKind::NpcAi,requires:&[ArtifactKind::Character,ArtifactKind::Lore]},
+ GameFactoryNode{id:"economy",produces:ArtifactKind::Economy,requires:&[ArtifactKind::GameBible,ArtifactKind::Item]},
+ GameFactoryNode{id:"multiplayer",produces:ArtifactKind::Multiplayer,requires:&[ArtifactKind::GameBible,ArtifactKind::Combat,ArtifactKind::Economy]},
+ GameFactoryNode{id:"build",produces:ArtifactKind::Build,requires:&[ArtifactKind::GameBible,ArtifactKind::WorldBible,ArtifactKind::Character,ArtifactKind::Quest,ArtifactKind::Level,ArtifactKind::Item,ArtifactKind::Weapon,ArtifactKind::Animation,ArtifactKind::Audio,ArtifactKind::Vfx,ArtifactKind::NpcAi,ArtifactKind::Multiplayer]},
+ GameFactoryNode{id:"testing",produces:ArtifactKind::QaReport,requires:&[ArtifactKind::Build,ArtifactKind::Combat,ArtifactKind::Economy]},
+ GameFactoryNode{id:"liveops",produces:ArtifactKind::LiveOpsPlan,requires:&[ArtifactKind::QaReport,ArtifactKind::Multiplayer,ArtifactKind::Economy]},
+];
+
+pub fn validate_graph(graph:&[GameFactoryNode])->Result<(),GraphError>{
+ let mut ids=BTreeSet::new(); let mut producers=BTreeSet::new();
+ for n in graph { if !ids.insert(n.id){return Err(GraphError::DuplicateNodeId)} if !producers.insert(n.produces){return Err(GraphError::DuplicateProducer(n.produces))} }
+ for n in graph { for &r in n.requires { if !producers.contains(&r){return Err(GraphError::MissingProducer{node:n.id,kind:r})} } }
+ Ok(())
+}
+
+pub fn topological_order(graph:&[GameFactoryNode])->Result<Vec<&'static str>,GraphError>{
+ validate_graph(graph)?; let mut remaining:BTreeMap<ArtifactKind,&GameFactoryNode>=graph.iter().map(|n|(n.produces,n)).collect(); let mut done=BTreeSet::new(); let mut order=Vec::with_capacity(graph.len());
+ while !remaining.is_empty(){ let mut ready:Vec<&GameFactoryNode>=remaining.values().copied().filter(|n|n.requires.iter().all(|r|done.contains(r))).collect(); if ready.is_empty(){return Err(GraphError::DependencyCycle)} ready.sort_by_key(|n|n.id); for n in ready {done.insert(n.produces);remaining.remove(&n.produces);order.push(n.id)} }
+ Ok(order)
+}
+
+pub fn resolve_dependencies(node:&GameFactoryNode,artifacts:&[ArtifactRef])->Result<Vec<ArtifactRef>,GraphError>{
+ node.requires.iter().map(|k|artifacts.iter().find(|a|a.kind==*k).cloned().ok_or(GraphError::MissingDependency{node:node.id,kind:*k})).collect()
+}
+
+#[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
+pub enum WorkflowStage { Input, Analyze, Plan, Produce, Quality, Integrate, Publish, Monitor, Optimize }
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub enum WorkflowError { EmptyStages, MustStartWithInput, MissingQualityGate, DuplicateStage }
+pub fn validate_workflow(stages:&[WorkflowStage])->Result<(),WorkflowError>{
+ if stages.is_empty(){return Err(WorkflowError::EmptyStages)} if stages[0]!=WorkflowStage::Input{return Err(WorkflowError::MustStartWithInput)}
+ if !stages.contains(&WorkflowStage::Quality){return Err(WorkflowError::MissingQualityGate)} let mut seen=BTreeSet::new(); for s in stages{if !seen.insert(*s){return Err(WorkflowError::DuplicateStage)}} Ok(())
+}
+
+#[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
+pub enum LifecyclePhase { Idea, Concept, Prototype, PreProd, Production, Alpha, Beta, Release, LiveOps, Expansion, Successor, Archived }
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub enum LifecycleError { InvalidTransition{from:LifecyclePhase,to:LifecyclePhase} }
+pub fn valid_transition(from:LifecyclePhase,to:LifecyclePhase)->bool{to==LifecyclePhase::Archived || (from as u8).checked_add(1).is_some_and(|n|n==to as u8)}
+pub fn transition(from:LifecyclePhase,to:LifecyclePhase)->Result<LifecyclePhase,LifecycleError>{if valid_transition(from,to){Ok(to)}else{Err(LifecycleError::InvalidTransition{from,to})}}
+
+#[cfg(test)]
+mod tests{
+ use super::*;
+ #[test]fn graph_validates_and_orders(){validate_graph(GAME_FACTORY_GRAPH).unwrap();let o=topological_order(GAME_FACTORY_GRAPH).unwrap();assert_eq!(o.first(),Some(&"concept"));assert_eq!(o.last(),Some(&"liveops"));assert_eq!(o.len(),GAME_FACTORY_GRAPH.len());}
+ #[test]fn graph_fails_closed(){let g=[GameFactoryNode{id:"broken",produces:ArtifactKind::Build,requires:&[ArtifactKind::Lore]}];assert!(matches!(validate_graph(&g),Err(GraphError::MissingProducer{..})));}
+ #[test]fn workflow_requires_quality(){assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Produce]),Err(WorkflowError::MissingQualityGate));}
+ #[test]fn lifecycle_is_sequential_or_archive(){assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Concept).is_ok());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Production).is_err());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Archived).is_ok());}
+}
