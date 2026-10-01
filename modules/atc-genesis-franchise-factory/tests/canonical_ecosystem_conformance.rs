@@ -3,11 +3,9 @@ use atc_genesis_franchise_factory::{canonical_ad_filename, validate_canonical_sp
 use std::{env, fs, path::PathBuf};
 
 #[test]
-fn canonical_ecosystem_specs_conform_when_root_is_provided() {
-    let Some(root) = env::var_os("ATC_CANONICAL_FRANCHISE_SPEC_ROOT") else {
-        eprintln!("ATC_CANONICAL_FRANCHISE_SPEC_ROOT not set; canonical external-source conformance is skipped");
-        return;
-    };
+fn canonical_ecosystem_specs_conform() {
+    let root = env::var_os("ATC_CANONICAL_FRANCHISE_SPEC_ROOT")
+        .expect("ATC_CANONICAL_FRANCHISE_SPEC_ROOT must be set for canonical external-source conformance");
 
     let root = PathBuf::from(root);
     let mut inputs = Vec::new();
