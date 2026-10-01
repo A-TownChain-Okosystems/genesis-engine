@@ -1,6 +1,6 @@
 pub mod atc_spec;
 
-pub use atc_spec::{parse_spec, validate_spec_set, AtcSpec, SpecError};
+pub use atc_spec::{parse_spec, validate_canonical_spec_set, validate_spec_set, AtcSpec, SpecError};
 
 //! Canonical Rust core for the Genesis Franchise Factory.
 
