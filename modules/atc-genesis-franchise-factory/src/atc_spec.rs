@@ -169,7 +169,7 @@ fn consume_type(tokens: &[Token], mut i: usize) -> Result<(String, usize), SpecE
                 angle_depth -= 1; ty.push('>'); i += 1;
             }
             TokenKind::Symbol(',') if angle_depth > 0 => { ty.push(','); i += 1; }
-            TokenKind::Symbol('[') | TokenKind::Symbol(']') => { ty.push_str(match t.kind { TokenKind::Symbol('[') => "[", _ => "]" }); i += 1; }
+            TokenKind::Symbol('[') => { ty.push('['); i += 1; }\n            TokenKind::Symbol(']') => { ty.push(']'); i += 1; }
             _ => break,
         }
     }
@@ -400,7 +400,7 @@ pub fn run(core: Core) -> Bool { return true }
     }
 
     #[test] fn validates_ad_set_and_duplicate_ids() {
-        let a = ("a_ad20.atc", VALID); let b = ("b_ad20.at20.atc", VALID);
+        let a = ("a_ad20.atc", VALID); let b = ("b_ad20.atc", VALID);
         assert_eq!(validate_spec_set([a, b]), Err(SpecError::DuplicateAdId(20)));
     }
 
