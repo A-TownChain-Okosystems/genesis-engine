@@ -96,7 +96,7 @@ pub fn resolve_dependencies(node:&GameFactoryNode,artifacts:&[ArtifactRef])->Res
 }
 
 #[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
-pub enum WorkflowStage { Input, Analyze, Plan, Produce, Quality, Integrate, Publish, Monitor, Optimize }
+pub enum WorkflowStage { Input, Analyze, Plan, Produce, Quality, Integrate, Publish, Monitor, Optimize, Replicate }
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
 pub enum WorkflowError { EmptyStages, MustStartWithInput, MissingQualityGate, DuplicateStage }
 pub fn validate_workflow(stages:&[WorkflowStage])->Result<(),WorkflowError>{
@@ -119,7 +119,9 @@ mod tests{
         assert_eq!(ArtifactKind::parse("qa-report"), Some(ArtifactKind::QaReport));
         assert_eq!(ArtifactKind::parse("unknown"), None);}
  #[test]fn graph_fails_closed(){let g=[GameFactoryNode{id:"broken",produces:ArtifactKind::Build,requires:&[ArtifactKind::Lore]}];assert!(matches!(validate_graph(&g),Err(GraphError::MissingProducer{..})));}
- #[test]fn workflow_requires_quality(){assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Produce]),Err(WorkflowError::MissingQualityGate));}
+ #[test]fn workflow_requires_quality(){assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Produce]),Err(WorkflowError::MissingQualityGate));
+        assert!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Analyze,WorkflowStage::Plan,WorkflowStage::Produce,WorkflowStage::Quality,WorkflowStage::Integrate,WorkflowStage::Publish,WorkflowStage::Monitor,WorkflowStage::Optimize,WorkflowStage::Replicate]).is_ok());
+        assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Quality,WorkflowStage::Quality]),Err(WorkflowError::DuplicateStage));}
  #[test]fn lifecycle_is_sequential_or_archive(){assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Concept).is_ok());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Production).is_err());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Archived).is_ok());
         let a=ArtifactEnvelope{reference:ArtifactRef{id:"x".into(),kind:ArtifactKind::Item,version:"1.0.0".into(),producer:"factory".into(),content_hash:None},dependencies:vec![],evidence:vec![]};
         validate_artifact(&a).unwrap();}
