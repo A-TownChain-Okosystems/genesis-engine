@@ -879,7 +879,7 @@ pub fn run(core: Core) -> Bool { return true }
     fn enforces_canonical_ad_range() {
         let source = VALID.replace("AD-20", "AD-44");
         assert_eq!(
-            validate_spec_set([("test_factory_ad44.atc", &source)]),
+            validate_spec_set([("test_factory_ad44.atc", source.as_str())]),
             Err(SpecError::NonCanonicalAdRange { ad_id: 44 })
         );
     }
