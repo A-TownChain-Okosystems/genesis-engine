@@ -18,16 +18,10 @@ fn canonical_ecosystem_specs_conform() {
         inputs.push((filename.to_owned(), source));
     }
 
-    let specs: Vec<AtcSpec> = inputs
-        .iter()
-        .map(|(filename, source)| {
-            atc_genesis_franchise_factory::parse_spec(filename, source)
-                .unwrap_or_else(|e| panic!("canonical {filename} failed Rust conformance: {e:?}"))
-        })
-        .collect();
-
-    let validated = validate_canonical_spec_set(specs.into_iter())
-        .expect("canonical AD-20..AD-43 set must validate");
+    let validated = validate_canonical_spec_set(
+        inputs.iter().map(|(filename, source)| (filename.as_str(), source.as_str())),
+    )
+    .expect("canonical AD-20..AD-43 set must validate");
 
     assert_eq!(validated.len(), 24);
     assert_eq!(validated.first().unwrap().ad_id, 20);
