@@ -1,0 +1,37 @@
+name: canonical-franchise-atc-conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-atc-conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout genesis-engine exact source
+        uses: actions/checkout@v4
+
+      - name: Checkout canonical ecosystem source
+        uses: actions/checkout@v4
+        with:
+          repository: A-TownChain-Okosystems/a-townchain-ecosystem
+          ref: 218c581dc2c05f2a13494a45d0136d035711677c
+          path: a-townchain-ecosystem
+
+      - name: Record exact source SHAs
+        run: |
+          echo "GENESIS_ENGINE_SHA=$(git rev-parse HEAD)"
+          echo "ECOSYSTEM_SHA=$(git -C a-townchain-ecosystem rev-parse HEAD)"
+
+      - name: Generate reproducible workspace lockfile
+        run: cargo generate-lockfile
+
+      - name: Rust canonical AD-20..AD-43 conformance
+        env:
+          ATC_CANONICAL_FRANCHISE_SPEC_ROOT: ${{ github.workspace }}/a-townchain-ecosystem/components/a-townchain-os-docs/wiki/kai-os/modules/franchise
+        run: cargo test -p atc-genesis-franchise-factory --test canonical_ecosystem_conformance --locked
