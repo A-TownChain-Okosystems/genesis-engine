@@ -92,7 +92,7 @@ pub fn topological_order(graph:&[GameFactoryNode])->Result<Vec<&'static str>,Gra
 }
 
 pub fn resolve_dependencies(node:&GameFactoryNode,artifacts:&[ArtifactRef])->Result<Vec<ArtifactRef>,GraphError>{
- node.requires.iter().map(|k|artifacts.iter().find(|a|a.kind==*k).cloned().ok_or(GraphError::MissingDependency{node:node.id,kind:*k})).collect()
+ node.requires.iter().map(|k|artifacts.iter().rev().find(|a|a.kind==*k).cloned().ok_or(GraphError::MissingDependency{node:node.id,kind:*k})).collect()
 }
 
 #[derive(Debug,Clone,Copy,PartialEq,Eq,PartialOrd,Ord)]
@@ -121,6 +121,12 @@ mod tests{
  #[test]fn graph_fails_closed(){let g=[GameFactoryNode{id:"broken",produces:ArtifactKind::Build,requires:&[ArtifactKind::Lore]}];assert!(matches!(validate_graph(&g),Err(GraphError::MissingProducer{..})));}
  #[test]fn workflow_requires_quality(){assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Produce]),Err(WorkflowError::MissingQualityGate));
         assert!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Analyze,WorkflowStage::Plan,WorkflowStage::Produce,WorkflowStage::Quality,WorkflowStage::Integrate,WorkflowStage::Publish,WorkflowStage::Monitor,WorkflowStage::Optimize,WorkflowStage::Replicate]).is_ok());
+        let duplicate_kind = [
+            ArtifactRef{id:"old".into(),kind:ArtifactKind::Item,version:"1.0.0".into(),producer:"a".into(),content_hash:None},
+            ArtifactRef{id:"new".into(),kind:ArtifactKind::Item,version:"1.0.0".into(),producer:"b".into(),content_hash:None},
+        ];
+        let item_node = &GAME_FACTORY_GRAPH[8];
+        assert_eq!(resolve_dependencies(item_node, &duplicate_kind).unwrap()[0].id, "new");
         assert_eq!(validate_workflow(&[WorkflowStage::Input,WorkflowStage::Quality,WorkflowStage::Quality]),Err(WorkflowError::DuplicateStage));}
  #[test]fn lifecycle_is_sequential_or_archive(){assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Concept).is_ok());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Production).is_err());assert!(transition(LifecyclePhase::Idea,LifecyclePhase::Archived).is_ok());
         let a=ArtifactEnvelope{reference:ArtifactRef{id:"x".into(),kind:ArtifactKind::Item,version:"1.0.0".into(),producer:"factory".into(),content_hash:None},dependencies:vec![],evidence:vec![]};
