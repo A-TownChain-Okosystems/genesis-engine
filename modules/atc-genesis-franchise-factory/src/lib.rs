@@ -474,7 +474,7 @@ impl FranchiseFactoryCore {
 mod workflow_conformance_tests {
  use super::*;
  #[test] fn default_registry_matches_reference_count() { let defs=default_workflows(); assert_eq!(defs.len(),17); let registry=WorkflowRegistry::new(defs).unwrap(); assert_eq!(registry.all().count(),17); }
- #[test] fn subsystem_matrix_matches_reference_shape() { let m=game_subsystems(); assert_eq!(m.len(),17); assert_eq!(m["concept"].len(),8); assert_eq!(m["multiplayer"].len(),10); assert_eq!(m["liveops"].len(),8); }
+ #[test] fn subsystem_matrix_matches_reference_shape() { let m=game_subsystems(); assert_eq!(m.len(),17); assert_eq!(m["concept"].len(),8); assert_eq!(m["multiplayer"].len(),10); assert_eq!(m["liveops"].len(),8); assert!(m.contains_key("franchise")); assert!(m.contains_key("virtual-world")); }
 }
 
 #[cfg(test)]
