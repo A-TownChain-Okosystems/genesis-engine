@@ -114,6 +114,163 @@ pub fn valid_transition(from:LifecyclePhase,to:LifecyclePhase)->bool{to==Lifecyc
 pub fn transition(from:LifecyclePhase,to:LifecyclePhase)->Result<LifecyclePhase,LifecycleError>{if valid_transition(from,to){Ok(to)}else{Err(LifecycleError::InvalidTransition{from,to})}}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MilestoneStatus { NotStarted, InProgress, Achieved }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Kpi {
+    pub dau: u64, pub mau: u64, pub revenue: f64, pub retention: f64,
+    pub crash_free: f64, pub rating: f64, pub sentiment: f64,
+}
+impl Default for Kpi {
+    fn default() -> Self {
+        Self { dau: 0, mau: 0, revenue: 0.0, retention: 0.0, crash_free: 100.0, rating: 0.0, sentiment: 0.5 }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Milestone {
+    pub id: String, pub franchise_id: String, pub name: String, pub phase: LifecyclePhase,
+    pub target: u64, pub achieved: u64, pub status: MilestoneStatus,
+    pub criteria: Vec<String>, pub done: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PhaseTemplate {
+    pub phase: LifecyclePhase, pub name: String, pub desc: String,
+    pub duration_days: u32, pub deliverables: Vec<String>, pub criteria: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PhaseHistory {
+    pub phase: LifecyclePhase, pub entered: f64, pub exited: f64,
+    pub notes: String, pub success: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LifecycleFranchise {
+    pub id: String, pub name: String, pub phase: LifecyclePhase,
+    pub history: Vec<PhaseHistory>, pub start: f64, pub target: f64,
+    pub budget: u64, pub spent: u64, pub team: Vec<String>, pub risk: u8,
+    pub prob: f64, pub milestones: Vec<Milestone>, pub kpi: Kpi,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LifecycleTransition {
+    pub id: String, pub franchise_id: String, pub from: LifecyclePhase,
+    pub to: LifecyclePhase, pub timestamp: f64, pub by: String, pub notes: String,
+}
+
+fn lifecycle_id(input: &str) -> String {
+    let mut h = Sha256::new();
+    h.update(input.as_bytes());
+    h.finalize().iter().take(8).map(|b| format!("{:02x}", b)).collect()
+}
+
+fn init_phase_templates() -> BTreeMap<LifecyclePhase, PhaseTemplate> {
+    let rows = [
+        (LifecyclePhase::Idea, "Idea", "Concept", 14, vec!["Vision"], vec!["Approved"]),
+        (LifecyclePhase::Concept, "Design", "Design", 30, vec!["GDD"], vec!["GDD OK"]),
+        (LifecyclePhase::Prototype, "Playable", "Playable", 60, vec!["Slice"], vec!["Playable"]),
+        (LifecyclePhase::PreProd, "Planning", "Planning", 90, vec!["Plan"], vec!["Plan OK"]),
+        (LifecyclePhase::Production, "Content", "Content", 365, vec!["Levels"], vec!["Complete"]),
+        (LifecyclePhase::Alpha, "Features", "Features", 60, vec!["Features"], vec!["Alpha"]),
+        (LifecyclePhase::Beta, "Polish", "Polish", 60, vec!["Bugs"], vec!["Beta"]),
+        (LifecyclePhase::Release, "Launch", "Launch", 30, vec!["Gold"], vec!["Launched"]),
+        (LifecyclePhase::LiveOps, "Ops", "Ops", 0, vec!["Seasons"], vec!["Active"]),
+        (LifecyclePhase::Expansion, "DLC", "DLC", 180, vec!["DLC"], vec!["DLC OK"]),
+        (LifecyclePhase::Successor, "Next", "Next", 365, vec!["Plan"], vec!["New"]),
+        (LifecyclePhase::Archived, "End", "End", 0, Vec::<&str>::new(), vec!["Closed"]),
+    ];
+    rows.into_iter().map(|(phase,name,desc,duration,deliverables,criteria)| (
+        phase,
+        PhaseTemplate {
+            phase, name:name.into(), desc:desc.into(), duration_days:duration,
+            deliverables:deliverables.into_iter().map(str::to_owned).collect(),
+            criteria:criteria.into_iter().map(str::to_owned).collect(),
+        }
+    )).collect()
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum LifecycleManagerError {
+    EmptyName,
+    UnknownFranchise,
+    InvalidTransition { from: LifecyclePhase, to: LifecyclePhase },
+    UnknownMilestone,
+}
+
+pub struct LifecycleManager {
+    pub franchises: BTreeMap<String, LifecycleFranchise>,
+    pub templates: BTreeMap<LifecyclePhase, PhaseTemplate>,
+    pub transitions: Vec<LifecycleTransition>,
+    pub milestones: BTreeMap<String, Milestone>,
+    now: f64,
+}
+
+impl LifecycleManager {
+    pub fn new() -> Self {
+        Self { franchises:BTreeMap::new(), templates:init_phase_templates(), transitions:Vec::new(), milestones:BTreeMap::new(), now:0.0 }
+    }
+
+    pub fn register(&mut self, name: impl Into<String>, budget:u64, target:f64, now:Option<f64>) -> Result<String, LifecycleManagerError> {
+        let name=name.into();
+        if name.is_empty() { return Err(LifecycleManagerError::EmptyName); }
+        let ts=now.unwrap_or(self.now);
+        let id=lifecycle_id(&format!("{}|{}", name, ts));
+        let history=vec![PhaseHistory{phase:LifecyclePhase::Idea,entered:ts,exited:0.0,notes:"Created".into(),success:false}];
+        self.franchises.insert(id.clone(), LifecycleFranchise {
+            id:id.clone(), name, phase:LifecyclePhase::Idea, history, start:ts,
+            target, budget, spent:0, team:Vec::new(), risk:5, prob:0.5,
+            milestones:Vec::new(), kpi:Kpi::default()
+        });
+        self.now += 1.0;
+        Ok(id)
+    }
+
+    pub fn transition(&mut self, franchise_id:&str, new_phase:LifecyclePhase, by:impl Into<String>, notes:impl Into<String>, now:Option<f64>) -> Result<(), LifecycleManagerError> {
+        let ts=now.unwrap_or(self.now);
+        let franchise=self.franchises.get_mut(franchise_id).ok_or(LifecycleManagerError::UnknownFranchise)?;
+        let old=franchise.phase;
+        if !valid_transition(old,new_phase) { return Err(LifecycleManagerError::InvalidTransition{from:old,to:new_phase}); }
+        if let Some(previous)=franchise.history.last_mut() { previous.exited=ts; previous.success=true; }
+        franchise.phase=new_phase;
+        franchise.history.push(PhaseHistory{phase:new_phase,entered:ts,exited:0.0,notes:notes.into(),success:false});
+        let transition_id=lifecycle_id(&format!("{}|{}", franchise_id, ts));
+        self.transitions.push(LifecycleTransition{id:transition_id,franchise_id:franchise_id.into(),from:old,to:new_phase,timestamp:ts,by:by.into(),notes:franchise.history.last().map(|h|h.notes.clone()).unwrap_or_default()});
+        self.now += 1.0;
+        Ok(())
+    }
+
+    pub fn add_milestone(&mut self, franchise_id:&str, name:impl Into<String>, phase:LifecyclePhase, target:u64, criteria:Vec<String>) -> Result<String, LifecycleManagerError> {
+        if !self.franchises.contains_key(franchise_id) { return Err(LifecycleManagerError::UnknownFranchise); }
+        let name=name.into();
+        let id=lifecycle_id(&format!("{}|{}", name, self.now));
+        let milestone=Milestone{id:id.clone(),franchise_id:franchise_id.into(),name,phase,target,achieved:0,status:MilestoneStatus::NotStarted,criteria,done:Vec::new()};
+        self.milestones.insert(id.clone(),milestone.clone());
+        self.franchises.get_mut(franchise_id).unwrap().milestones.push(milestone);
+        self.now += 1.0;
+        Ok(id)
+    }
+
+    pub fn achieve_milestone(&mut self, milestone_id:&str, achieved:u64, done:Vec<String>) -> Result<(), LifecycleManagerError> {
+        let milestone=self.milestones.get_mut(milestone_id).ok_or(LifecycleManagerError::UnknownMilestone)?;
+        milestone.achieved=achieved;
+        milestone.done=done;
+        milestone.status=if achieved >= milestone.target { MilestoneStatus::Achieved } else { MilestoneStatus::InProgress };
+        if let Some(franchise)=self.franchises.get_mut(&milestone.franchise_id) {
+            if let Some(copy)=franchise.milestones.iter_mut().find(|m|m.id==milestone_id) { *copy=milestone.clone(); }
+        }
+        Ok(())
+    }
+
+    pub fn health(&self, franchise_id:&str) -> Result<(LifecyclePhase,u8,f64,f64,u64,f64), LifecycleManagerError> {
+        let f=self.franchises.get(franchise_id).ok_or(LifecycleManagerError::UnknownFranchise)?;
+        let budget_used=if f.budget==0 {0.0} else { ((f.spent as f64 / f.budget as f64)*10000.0).round()/10000.0 };
+        Ok((f.phase,f.risk,f.prob,budget_used,f.kpi.dau,f.kpi.crash_free))
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FranchiseStatus { Concept, InProduction, Testing, Live, Expanding, Archived }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PipelineStatus { Pending, InProgress, Complete, Skipped }
