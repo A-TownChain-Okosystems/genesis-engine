@@ -431,6 +431,22 @@ impl FranchiseFactoryCore {
     }
 }
 
+
+#[cfg(test)]
+mod workflow_conformance_tests {
+ use super::*;
+ #[test] fn default_workflows_are_valid() {
+  let defs=default_workflows();
+  assert_eq!(defs.len(),6);
+  let registry=WorkflowRegistry::new(defs).unwrap();
+  assert_eq!(registry.get("franchise").unwrap().outputs,vec!["franchise-package","operating-model","replication-plan"]);
+ }
+ #[test] fn registry_rejects_invalid_workflows() {
+  let d=WorkflowDefinition{id:"bad".into(),name:"bad".into(),stages:vec![WorkflowStage::Analyze,WorkflowStage::Quality],capabilities:vec![],outputs:vec![],description:String::new()};
+  assert_eq!(WorkflowRegistry::new(vec![d]),Err(WorkflowRegistryError::MustStartWithInput));
+ }
+}
+
 #[cfg(test)]
 mod tests{
  use super::*;
