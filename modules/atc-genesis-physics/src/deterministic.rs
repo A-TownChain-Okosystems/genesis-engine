@@ -316,7 +316,7 @@ impl DeterministicPhysics {
         let iterations = self.config.max_collision_iterations;
         for body in &mut self.bodies {
             if !body.dynamic { continue; }
-            let acceleration = gravity + body.force.scale(body.mass.div(body.mass));
+            let acceleration = gravity + body.force.div(body.mass);
             body.velocity = body.velocity + acceleration.scale(dt);
             body.position = body.position + body.velocity.scale(dt);
             body.clear_force();
