@@ -3,7 +3,20 @@ use std::collections::BTreeSet;
 
 /// Quest lifecycle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum QuestStatus { Available, Active, Completed, Failed, Abandoned, Expired }
+pub enum QuestStatus {
+    /// Available.
+    Available,
+    /// Active.
+    Active,
+    /// Completed.
+    Completed,
+    /// Failed.
+    Failed,
+    /// Abandoned.
+    Abandoned,
+    /// Expired.
+    Expired,
+}
 
 /// Quest objective.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -33,13 +46,35 @@ pub struct QuestState {
     /// Completed objectives.
     pub completed_steps: BTreeSet<QuestStepId>,
 }
-impl Default for QuestState { fn default() -> Self { Self { status: QuestStatus::Available, completed_steps: BTreeSet::new() } } }
+
+impl Default for QuestState {
+    fn default() -> Self {
+        Self {
+            status: QuestStatus::Available,
+            completed_steps: BTreeSet::new(),
+        }
+    }
+}
+
 impl Quest {
     /// Validates a quest definition.
     pub fn validate(&self) -> StoryResult<()> {
-        if self.name.trim().is_empty() { return Err(StoryError::InvalidState("quest name is empty".into())); }
-        if self.steps.is_empty() { return Err(StoryError::InvalidState(format!("quest {} has no steps", self.id.value()))); }
-        if self.steps.iter().any(|s| s.description.trim().is_empty()) { return Err(StoryError::InvalidState("empty quest step".into())); }
+        if self.name.trim().is_empty() {
+            return Err(StoryError::InvalidState("quest name is empty".into()));
+        }
+        if self.steps.is_empty() {
+            return Err(StoryError::InvalidState(format!(
+                "quest {} has no steps",
+                self.id.value()
+            )));
+        }
+        if self
+            .steps
+            .iter()
+            .any(|s| s.description.trim().is_empty())
+        {
+            return Err(StoryError::InvalidState("empty quest step".into()));
+        }
         Ok(())
     }
 }
