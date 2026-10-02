@@ -124,6 +124,10 @@ impl FixedVec3 {
         Self::new(self.x * scalar, self.y * scalar, self.z * scalar)
     }
 
+    pub fn div(self, scalar: Fixed) -> Self {
+        Self::new(self.x / scalar, self.y / scalar, self.z / scalar)
+    }
+
     pub fn add(self, rhs: Self) -> Self {
         Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
     }
