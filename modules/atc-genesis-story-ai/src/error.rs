@@ -24,7 +24,10 @@ impl std::fmt::Display for StoryError {
             Self::InvalidTransition(v) => write!(f, "invalid transition: {v}"),
             Self::InvalidProposal(v) => write!(f, "invalid proposal: {v}"),
             Self::ReplayMismatch { expected, actual } => {
-                write!(f, "replay mismatch: expected {expected}, got {actual}")
+                write!(
+                    f,
+                    "replay mismatch: expected {expected}, got {actual}"
+                )
             }
         }
     }
