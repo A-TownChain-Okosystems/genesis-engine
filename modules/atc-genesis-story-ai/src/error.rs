@@ -14,6 +14,7 @@ pub enum StoryError {
     /// Replay diverged from the recorded state.
     ReplayMismatch { expected: u64, actual: u64 },
 }
+
 impl std::fmt::Display for StoryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -22,10 +23,14 @@ impl std::fmt::Display for StoryError {
             Self::InvalidState(v) => write!(f, "invalid state: {v}"),
             Self::InvalidTransition(v) => write!(f, "invalid transition: {v}"),
             Self::InvalidProposal(v) => write!(f, "invalid proposal: {v}"),
-            Self::ReplayMismatch { expected, actual } => write!(f, "replay mismatch: expected {expected}, got {actual}"),
+            Self::ReplayMismatch { expected, actual } => {
+                write!(f, "replay mismatch: expected {expected}, got {actual}")
+            }
         }
     }
 }
+
 impl std::error::Error for StoryError {}
+
 /// Result alias.
 pub type StoryResult<T> = Result<T, StoryError>;
