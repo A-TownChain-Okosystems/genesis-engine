@@ -10,7 +10,10 @@ pub struct Id<T> {
 impl<T> Id<T> {
     /// Creates an identifier.
     pub const fn new(value: u64) -> Self {
-        Self { value, marker: PhantomData }
+        Self {
+            value,
+            marker: PhantomData,
+        }
     }
 
     /// Returns the numeric value.
@@ -32,7 +35,21 @@ macro_rules! ids {
 }
 
 ids!(
-    StoryId, ChapterId, SceneId, CharacterId, FactionId, LocationId,
-    QuestId, QuestStepId, EventId, DialogueId, ChoiceId, LoreId,
-    MemoryId, TimelineEventId, ProposalId, TriggerId, TransactionId
+    StoryId,
+    ChapterId,
+    SceneId,
+    CharacterId,
+    FactionId,
+    LocationId,
+    QuestId,
+    QuestStepId,
+    EventId,
+    DialogueId,
+    ChoiceId,
+    LoreId,
+    MemoryId,
+    TimelineEventId,
+    ProposalId,
+    TriggerId,
+    TransactionId
 );
