@@ -70,16 +70,19 @@ impl StoryRuntime {
         consequences: &[Consequence],
     ) -> StoryResult<()> {
         let snapshot = self.state.clone();
+
         for c in consequences {
             if let Err(e) = c.apply(&mut self.state) {
                 self.state = snapshot;
                 return Err(e);
             }
         }
+
         if let Err(e) = self.state.validate() {
             self.state = snapshot;
             return Err(e);
         }
+
         Ok(())
     }
 
