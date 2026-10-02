@@ -69,7 +69,10 @@ pub fn state_fingerprint(runtime: &StoryRuntime) -> u64 {
     }
 
     u64v(&mut h, runtime.state.tick);
-    u64v(&mut h, runtime.state.current_scene.unwrap_or(0));
+    u64v(
+        &mut h,
+        runtime.state.current_scene.unwrap_or(0),
+    );
 
     for (id, c) in &runtime.state.characters {
         u64v(&mut h, id.value());
