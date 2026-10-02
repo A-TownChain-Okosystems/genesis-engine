@@ -44,7 +44,9 @@ impl DialogueGraph {
             }
             for c in &node.choices {
                 if c.text.trim().is_empty() {
-                    return Err(StoryError::InvalidState("dialogue choice is empty".into()));
+                    return Err(StoryError::InvalidState(
+                        "dialogue choice is empty".into(),
+                    ));
                 }
                 if let Some(next) = c.next {
                     if !self.nodes.contains_key(&next) {
