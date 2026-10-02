@@ -1,5 +1,5 @@
 use crate::{Consequence, StoryError, StoryResult, TriggerId, WorldState};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Trigger condition evaluated against deterministic state.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,11 +39,19 @@ pub struct Trigger {
     /// Fire once only.
     pub one_shot: bool,
 }
+/// Eligible trigger consequences.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TriggerBatch {
+    /// Trigger IDs that fired.
+    pub fired: BTreeSet<TriggerId>,
+    /// Ordered consequences.
+    pub consequences: Vec<Consequence>,
+}
 /// Trigger registry.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TriggerRegistry {
     pub(crate) triggers: BTreeMap<TriggerId, Trigger>,
-    pub(crate) fired: std::collections::BTreeSet<TriggerId>,
+    pub(crate) fired: BTreeSet<TriggerId>,
 }
 impl TriggerRegistry {
     /// Inserts a trigger.
@@ -52,16 +60,18 @@ impl TriggerRegistry {
         if self.triggers.contains_key(&trigger.id) { return Err(StoryError::AlreadyExists(format!("trigger {}", trigger.id.value()))); }
         self.triggers.insert(trigger.id, trigger); Ok(())
     }
-    /// Collects eligible consequences in deterministic ID order.
-    pub fn collect(&mut self, state: &WorldState) -> Vec<Consequence> {
-        let mut out = Vec::new();
+    /// Evaluates triggers without committing their fired state.
+    pub fn collect(&self, state: &WorldState) -> TriggerBatch {
+        let mut fired = BTreeSet::new(); let mut consequences = Vec::new();
         for (id, trigger) in &self.triggers {
             if trigger.one_shot && self.fired.contains(id) { continue; }
             if trigger.condition.matches(state) {
-                out.extend(trigger.consequences.clone());
-                if trigger.one_shot { self.fired.insert(*id); }
+                consequences.extend(trigger.consequences.clone());
+                if trigger.one_shot { fired.insert(*id); }
             }
         }
-        out
+        TriggerBatch { fired, consequences }
     }
+    /// Commits one-shot trigger IDs after consequences succeed.
+    pub fn mark_fired(&mut self, ids: BTreeSet<TriggerId>) { self.fired.extend(ids); }
 }
