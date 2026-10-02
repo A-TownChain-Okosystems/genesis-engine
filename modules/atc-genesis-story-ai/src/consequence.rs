@@ -43,7 +43,11 @@ impl Consequence {
     /// Applies one consequence.
     pub fn apply(&self, state: &mut WorldState) -> StoryResult<()> {
         match self {
-            Self::Relationship { character, other, delta } => {
+            Self::Relationship {
+                character,
+                other,
+                delta,
+            } => {
                 let c = state.characters.get_mut(character).ok_or_else(|| {
                     StoryError::NotFound(format!("character {}", character.value()))
                 })?;
