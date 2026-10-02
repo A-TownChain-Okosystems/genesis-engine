@@ -296,24 +296,6 @@ impl DeterministicPhysics {
         }
     }
 
-    fn resolve_collisions(&self, body: &mut FixedRigidBody) {
-        for _ in 0..self.config.max_collision_iterations {
-            let Some((_, normal, penetration)) = self.colliders.iter()
-                .filter_map(|collider| collider.bounds.point_resolution(body.position)
-                    .map(|(normal, penetration)| (collider.entity, normal, penetration)))
-                .min_by(|a, b| a.2.raw().cmp(&b.2.raw()).then_with(|| a.0.0.cmp(&b.0.0)))
-            else { break };
-
-            body.position = body.position + normal.scale(penetration + Fixed::from_raw(1));
-            let inward = body.velocity.dot(normal);
-            if inward < Fixed::ZERO {
-                body.velocity = body.velocity - normal.scale(
-                    (Fixed::ONE + body.restitution).mul(inward)
-                );
-            }
-        }
-    }
-
     pub fn step_fixed(&mut self) {
         let dt = self.config.fixed_dt;
         let gravity = self.config.gravity;
