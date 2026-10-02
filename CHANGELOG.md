@@ -9,6 +9,22 @@ date: 2026-09-07
 
 # Changelog — genesis-engine
 
+## [Unreleased]
+
+### Added
+- Deterministic atc-genesis-story-ai narrative runtime.
+- Story graph, scenes, chapters, characters, relationships, quests, dialogue, lore, memory, events and timeline contracts.
+- Atomic consequence transactions with rollback.
+- Deterministic trigger registry and one-shot trigger semantics.
+- Provider-neutral AI NarrativeProposal boundary and proposal validation.
+- Replay log and non-cryptographic deterministic state fingerprint.
+- Genesis Engine integration adapter that prevents unvalidated AI proposals from mutating runtime state.
+- Dedicated integration, rollback, determinism, replay and trigger tests.
+
+### Changed
+- Workspace now includes modules/atc-genesis-story-ai.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
