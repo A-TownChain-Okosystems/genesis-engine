@@ -14,9 +14,20 @@ pub struct ValidationReport {
     /// Number of lore entries.
     pub lore_entries: usize,
 }
+
 /// Validates a story and returns structural counts.
-pub fn validate_story(story: &StoryDefinition) -> StoryResult<ValidationReport> {
+pub fn validate_story(
+    story: &StoryDefinition,
+) -> StoryResult<ValidationReport> {
     story.validate()?;
-    if story.scenes.is_empty() { return Err(StoryError::InvalidState("story has no scenes".into())); }
-    Ok(ValidationReport { scenes: story.scenes.len(), chapters: story.chapters.len(), quests: story.quests.len(), events: story.events.len(), lore_entries: story.lore.entries.len() })
+    if story.scenes.is_empty() {
+        return Err(StoryError::InvalidState("story has no scenes".into()));
+    }
+    Ok(ValidationReport {
+        scenes: story.scenes.len(),
+        chapters: story.chapters.len(),
+        quests: story.quests.len(),
+        events: story.events.len(),
+        lore_entries: story.lore.entries.len(),
+    })
 }
