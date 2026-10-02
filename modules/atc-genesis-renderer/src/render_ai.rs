@@ -125,8 +125,8 @@ impl RenderingAi {
         let over_budget = frame_time > budget.frame_time_ms;
         let severe_pressure = frame_time > budget.frame_time_ms * 1.25;
         let memory_pressure = hardware.max_texture_memory_mb > 0
-            && metrics.texture_memory_mb.saturating_mul(100)
-                >= hardware.max_texture_memory_mb.saturating_mul(90);
+            && u64::from(metrics.texture_memory_mb).saturating_mul(100)
+                >= u64::from(hardware.max_texture_memory_mb).saturating_mul(90);
 
         let scene_pressure = metrics.visible_instances >= 20_000
             || metrics.visible_triangles >= 10_000_000
