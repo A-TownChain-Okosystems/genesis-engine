@@ -1,4 +1,6 @@
-use crate::{CharacterId, CharacterState, QuestId, QuestState, StoryError, StoryResult};
+use crate::{
+    CharacterId, CharacterState, QuestId, QuestState, StoryError, StoryResult,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Mutable deterministic narrative state.
@@ -21,14 +23,38 @@ pub struct WorldState {
     /// Simulation tick.
     pub tick: u64,
 }
+
 impl Default for WorldState {
-    fn default() -> Self { Self { characters: BTreeMap::new(), quests: BTreeMap::new(), flags: BTreeMap::new(), counters: BTreeMap::new(), completed_quests: BTreeSet::new(), failed_quests: BTreeSet::new(), current_scene: None, tick: 0 } }
+    fn default() -> Self {
+        Self {
+            characters: BTreeMap::new(),
+            quests: BTreeMap::new(),
+            flags: BTreeMap::new(),
+            counters: BTreeMap::new(),
+            completed_quests: BTreeSet::new(),
+            failed_quests: BTreeSet::new(),
+            current_scene: None,
+            tick: 0,
+        }
+    }
 }
+
 impl WorldState {
     /// Validates state invariants.
     pub fn validate(&self) -> StoryResult<()> {
-        for c in self.characters.values() { c.validate()?; }
-        if self.completed_quests.intersection(&self.failed_quests).next().is_some() { return Err(StoryError::InvalidState("quest is both completed and failed".into())); }
+        for c in self.characters.values() {
+            c.validate()?;
+        }
+        if self
+            .completed_quests
+            .intersection(&self.failed_quests)
+            .next()
+            .is_some()
+        {
+            return Err(StoryError::InvalidState(
+                "quest is both completed and failed".into(),
+            ));
+        }
         Ok(())
     }
 }
