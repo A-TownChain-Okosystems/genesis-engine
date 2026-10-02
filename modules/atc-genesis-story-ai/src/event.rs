@@ -10,7 +10,14 @@ pub struct NarrativeEvent {
     /// Consequences.
     pub consequences: Vec<Consequence>,
 }
+
 impl NarrativeEvent {
     /// Creates an event.
-    pub fn new(id: EventId, name: impl Into<String>) -> Self { Self { id, name: name.into(), consequences: Vec::new() } }
+    pub fn new(id: EventId, name: impl Into<String>) -> Self {
+        Self {
+            id,
+            name: name.into(),
+            consequences: Vec::new(),
+        }
+    }
 }
