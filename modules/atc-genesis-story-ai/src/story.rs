@@ -1,4 +1,7 @@
-use crate::{DialogueGraph, EventId, LoreDatabase, NarrativeEvent, Quest, QuestId, SceneId, StoryError, StoryGraph, StoryId, StoryResult};
+use crate::{
+    DialogueGraph, EventId, LoreDatabase, NarrativeEvent, Quest, QuestId, SceneId,
+    StoryError, StoryGraph, StoryId, StoryResult,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Narrative scene.
@@ -11,6 +14,7 @@ pub struct Scene {
     /// Optional entry event.
     pub event: Option<EventId>,
 }
+
 /// Story chapter.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Chapter {
@@ -21,6 +25,7 @@ pub struct Chapter {
     /// Scene IDs.
     pub scenes: Vec<SceneId>,
 }
+
 /// Static story definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StoryDefinition {
@@ -43,23 +48,49 @@ pub struct StoryDefinition {
     /// Canonical lore.
     pub lore: LoreDatabase,
 }
+
 impl StoryDefinition {
     /// Creates an empty definition.
-    pub fn new(id: StoryId, title: impl Into<String>) -> Self { Self { id, title: title.into(), chapters: BTreeMap::new(), scenes: BTreeMap::new(), graph: StoryGraph::new(), events: BTreeMap::new(), quests: BTreeMap::new(), dialogues: DialogueGraph::default(), lore: LoreDatabase::default() } }
+    pub fn new(id: StoryId, title: impl Into<String>) -> Self {
+        Self {
+            id,
+            title: title.into(),
+            chapters: BTreeMap::new(),
+            scenes: BTreeMap::new(),
+            graph: StoryGraph::new(),
+            events: BTreeMap::new(),
+            quests: BTreeMap::new(),
+            dialogues: DialogueGraph::default(),
+            lore: LoreDatabase::default(),
+        }
+    }
+
     /// Validates static content.
     pub fn validate(&self) -> StoryResult<()> {
-        if self.title.trim().is_empty() { return Err(StoryError::InvalidState("story title is empty".into())); }
+        if self.title.trim().is_empty() {
+            return Err(StoryError::InvalidState("story title is empty".into()));
+        }
+
         let scenes: BTreeSet<_> = self.scenes.keys().copied().collect();
         self.graph.validate(&scenes)?;
         self.dialogues.validate()?;
         self.lore.validate()?;
-        for q in self.quests.values() { q.validate()?; }
+
+        for q in self.quests.values() {
+            q.validate()?;
+        }
         for c in self.chapters.values() {
-            for s in &c.scenes { if !self.scenes.contains_key(s) { return Err(StoryError::NotFound(format!("scene {}", s.value()))); } }
+            for s in &c.scenes {
+                if !self.scenes.contains_key(s) {
+                    return Err(StoryError::NotFound(format!("scene {}", s.value())));
+                }
+            }
         }
         for scene in self.scenes.values() {
             if let Some(event) = scene.event {
-                if !self.events.contains_key(&event) { return Err(StoryError::NotFound(format!("event {}", event.value()))); }
+                if !self.events.contains_key(&event) {
+                    return Err(StoryError::NotFound(format!("event {}", event.value())));
+                }
             }
         }
         Ok(())
