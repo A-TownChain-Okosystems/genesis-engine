@@ -189,6 +189,9 @@ impl PredictionBuffer {
     pub fn len(&self) -> usize {
         self.inputs.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self.inputs.is_empty()
+    }
 }
 pub trait ReplicationTransport {
     fn send(&mut self, bytes: &[u8]) -> Result<(), String>;
@@ -345,8 +348,12 @@ mod tests {
             rotation_xyz_microunits: [100000, 200000, 300000],
         };
         let p = InterpolatedTransform::between(&a, &b, 0.5).unwrap();
-        assert_eq!(p.position, [0.5, 1.0, 1.5]);
-        assert_eq!(p.rotation, [0.05, 0.1, 0.15])
+        for (actual, expected) in p.position.into_iter().zip([0.5, 1.0, 1.5]) {
+            assert!((actual - expected).abs() < 1e-6);
+        }
+        for (actual, expected) in p.rotation.into_iter().zip([0.05, 0.1, 0.15]) {
+            assert!((actual - expected).abs() < 1e-6);
+        }
     }
     #[test]
     fn invalid_rotation_blocks_interpolation() {
