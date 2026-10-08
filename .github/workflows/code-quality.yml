@@ -1,0 +1,32 @@
+name: Genesis Engine Code Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions: read-all
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all -- --check
+      - run: cargo check --workspace --all-targets
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Python validation
+        run: |
+          python -m compileall -q franchise_factory
+          if find franchise_factory -type d -name tests | grep -q .; then
+            python -m pip install --upgrade pip pytest
+            python -m pytest -q franchise_factory
+          fi
