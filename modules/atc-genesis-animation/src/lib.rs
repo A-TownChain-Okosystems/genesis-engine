@@ -44,7 +44,7 @@ impl Skeleton {
     pub fn validate(&self) -> bool {
         self.bones.iter().all(|b| {
             b.parent
-                .map_or(true, |p| p != b.id && self.bone(p).is_some())
+                .is_none_or(|p| p != b.id && self.bone(p).is_some())
         })
     }
     pub fn roots(&self) -> Vec<BoneId> {
@@ -131,7 +131,7 @@ impl Default for AnimationPlayer {
 }
 impl AnimationPlayer {
     pub fn update(&mut self, dt: f32, duration: f32) {
-        self.time_seconds += (dt.max(0.0) * self.speed);
+        self.time_seconds += dt.max(0.0) * self.speed;
         if duration > 0.0 {
             if self.looping {
                 self.time_seconds = self.time_seconds.rem_euclid(duration)
@@ -151,8 +151,8 @@ fn lerp_pose(a: PoseTransform, b: PoseTransform, t: f32) -> PoseTransform {
         out.scale[i] = a.scale[i] + (b.scale[i] - a.scale[i]) * t;
     }
     let mut q = [0.0; 4];
-    for i in 0..4 {
-        q[i] = a.rotation_xyzw[i] + (b.rotation_xyzw[i] - a.rotation_xyzw[i]) * t;
+    for (i, value) in q.iter_mut().enumerate() {
+        *value = a.rotation_xyzw[i] + (b.rotation_xyzw[i] - a.rotation_xyzw[i]) * t;
     }
     let n = (q.iter().map(|v| v * v).sum::<f32>()).sqrt();
     out.rotation_xyzw = if n > f32::EPSILON {
