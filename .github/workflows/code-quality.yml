@@ -26,6 +26,7 @@ jobs:
       - name: Python validation
         run: |
           python -m compileall -q franchise_factory
+          export PYTHONPATH="$GITHUB_WORKSPACE/franchise_factory${PYTHONPATH:+:$PYTHONPATH}"
           if find franchise_factory -type d -name tests | grep -q .; then
             python -m pip install --upgrade pip pytest
             python -m pytest -q franchise_factory
