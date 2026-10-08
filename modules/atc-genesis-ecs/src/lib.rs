@@ -288,10 +288,6 @@ impl SystemSchedule {
         self.systems.is_empty()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.systems.is_empty()
-    }
-
     pub fn get(&self, id: SystemId) -> Option<&SystemDescriptor> {
         self.systems.get(&id)
     }
@@ -887,7 +883,6 @@ impl<R: Renderer> TransformRenderPipeline<R> {
 pub struct WorldEcsBridge {
     chunk_entities: HashMap<WorldChunkId, EntityId>,
 }
-
 
 impl WorldEcsBridge {
     pub fn new() -> Self {
