@@ -90,9 +90,7 @@ impl SceneDocument {
         for n in &self.nodes {
             if world.transform(n.id).is_none() && !world.insert(n.id, n.transform) {
                 return Err(format!("failed to create entity {}", n.id.0));
-            } else if world.transform(n.id).is_some()
-                && !world.set_transform(n.id, n.transform)
-            {
+            } else if world.transform(n.id).is_some() && !world.set_transform(n.id, n.transform) {
                 return Err(format!("failed to update entity {}", n.id.0));
             }
         }
