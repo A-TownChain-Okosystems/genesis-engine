@@ -454,6 +454,10 @@ impl SystemExecutor {
         self.systems.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.systems.is_empty()
+    }
+
     pub fn parallel_batches(&self) -> Result<Vec<Vec<SystemId>>, ScheduleError> {
         let mut schedule = SystemSchedule::new();
         for system in self.systems.values() {
