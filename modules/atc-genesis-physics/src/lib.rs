@@ -89,7 +89,7 @@ impl WorldPhysicsBridge {
     }
 }
 impl PhysicsWorld for PhysicsSimulation {
-    fn step(&mut self,dt:f32){let _=self.advance(dt)}
+    fn step(&mut self,dt:f32){let _=self.advance(dt);}
     fn raycast(&self,origin:[f32;3],direction:[f32;3],max_distance:f32)->Option<EntityId>{self.collisions.raycast(origin,direction,max_distance)}
 }
 #[cfg(test)]
