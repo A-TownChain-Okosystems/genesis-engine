@@ -1,6 +1,6 @@
 # Genesis Franchise Factory
 
-The Franchise Factory is now an integrated production subsystem of `genesis-engine`.
+The Franchise Factory is an integrated subsystem of `genesis-engine`; deterministic production contracts are now implemented canonically in Rust.
 
 ## Boundary
 
@@ -24,11 +24,11 @@ Games and franchises
 
 ## Components
 
-- `gff/core.py` — AD-20 franchise registry and pipeline orchestration
+- `gff/core.py` — AD-20 compatibility/reference adapter (Rust is canonical)
 - `gff/dao.py` — ATC-9900 franchise DAO model
-- `gff/lifecycle.py` — AD-43 lifecycle state machine
+- `gff/lifecycle.py` — AD-43 compatibility/reference adapter (Rust is canonical)
 - `gff/spec_loader.py` — canonical `.atc` descriptor loader
-- `gff/workflows.py` — 17 provider-neutral AI factory workflows
+- `gff/workflows.py` — provider-neutral workflow reference/adapter layer (Rust validation is canonical)
 - `gff/artifacts.py` — typed artifact/provenance/evidence contracts
 - `gff/game_factory.py` — deterministic Game Factory dependency graph
 
@@ -44,6 +44,6 @@ The workflow engine does not call an AI provider directly. Model providers, cred
 
 ## Engine integration
 
-The subsystem is located under `franchise_factory/` rather than being made a Rust workspace member. This preserves the existing Python reference implementation while making the Franchise Factory part of the Genesis Engine repository and CI/documentation surface.
+The Rust implementation under `modules/atc-genesis-franchise-factory/` is the canonical production core. `franchise_factory/gff/` remains only as a compatibility/reference adapter until Rust↔Python conformance and integration evidence permit removal.
 
 Production adapters to engine runtime systems, GCL/ATC-VM and external providers remain explicit integration boundaries and must be backed by implementation evidence before being marked production-ready.
