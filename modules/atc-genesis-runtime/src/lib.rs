@@ -8,7 +8,7 @@ use atc_genesis_network::security::{PacketGuard, PacketRejectReason, SessionId};
 use atc_genesis_network::{
     NetworkEntity, ReplicatedState, ReplicationHeader, ReplicationTransport, Replicator, Tick,
 };
-use atc_genesis_physics::{PhysicsConfig, PhysicsSimulation, WorldPhysicsBridge};
+use atc_genesis_physics::{PhysicsConfig, PhysicsSimulation};
 use atc_genesis_platform::{AudioRuntime, EntityId, FrameId, PhysicsWorld, Renderer, Transform};
 use atc_genesis_world::{WorldChunk, WorldChunkId, WorldStreamer};
 use std::collections::HashMap;
@@ -30,7 +30,6 @@ pub struct GenesisRuntime<
     animations: HashMap<EntityId, AnimationBinding>,
     clips: HashMap<AnimationClipId, AnimationClip>,
     ecs_bridge: WorldEcsBridge,
-    physics_bridge: WorldPhysicsBridge,
     frame: u64,
 }
 
@@ -71,7 +70,6 @@ impl<R, A, N: ReplicationTransport> GenesisRuntime<R, A, N> {
             animations: HashMap::new(),
             clips: HashMap::new(),
             ecs_bridge: WorldEcsBridge::new(),
-            physics_bridge: WorldPhysicsBridge::new(),
             frame: 0,
         }
     }
