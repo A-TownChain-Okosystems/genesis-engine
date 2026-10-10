@@ -146,13 +146,15 @@ impl AnimationPlayer {
 }
 fn lerp_pose(a: PoseTransform, b: PoseTransform, t: f32) -> PoseTransform {
     let mut out = PoseTransform::default();
-    for i in 0..3 {
-        out.translation[i] = a.translation[i] + (b.translation[i] - a.translation[i]) * t;
-        out.scale[i] = a.scale[i] + (b.scale[i] - a.scale[i]) * t;
+    for (i, value) in out.translation.iter_mut().enumerate() {
+        *value = a.translation[i] + (b.translation[i] - a.translation[i]) * t;
+    }
+    for (i, value) in out.scale.iter_mut().enumerate() {
+        *value = a.scale[i] + (b.scale[i] - a.scale[i]) * t;
     }
     let mut q = [0.0; 4];
-    for i in 0..4 {
-        q[i] = a.rotation_xyzw[i] + (b.rotation_xyzw[i] - a.rotation_xyzw[i]) * t;
+    for (i, value) in q.iter_mut().enumerate() {
+        *value = a.rotation_xyzw[i] + (b.rotation_xyzw[i] - a.rotation_xyzw[i]) * t;
     }
     let n = (q.iter().map(|v| v * v).sum::<f32>()).sqrt();
     out.rotation_xyzw = if n > f32::EPSILON {
