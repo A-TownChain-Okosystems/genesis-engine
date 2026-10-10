@@ -6,8 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 # fmt: off
-AD_RE=re.compile(r"^//\s*AD-(\d+)\s*(?:[—\-]+\s*)?(.+)$",re.MULTILINE); STRUCT_RE=re.compile(r"struct\s+(\w+)"); ENUM_RE=re.compile(r"enum\s+(\w+)"); FN_RE=re.compile(r"pub\s+fn\s+(\w+)"); COPYRIGHT_RE=re.compile(r"Copyright \(c\) 2026"); FORBIDDEN_RE=re.compile(r'import\s+"?[^"
-]*chronicles',re.IGNORECASE)
+AD_RE=re.compile(r"^//\s*AD-(\d+)\s*(?:[—\-]+\s*)?(.+)$",re.MULTILINE); STRUCT_RE=re.compile(r"struct\s+(\w+)"); ENUM_RE=re.compile(r"enum\s+(\w+)"); FN_RE=re.compile(r"pub\s+fn\s+(\w+)"); COPYRIGHT_RE=re.compile(r"Copyright \(c\) 2026"); FORBIDDEN_RE=re.compile(r'import\s+"?[^"\n]*chronicles',re.IGNORECASE)
 @dataclass(frozen=True)
 class FactorySpec:
     ad_id:int; title:str; file:str; structs:tuple[str,...]=(); enums:tuple[str,...]=(); functions:tuple[str,...]=(); raw:str=field(default="",repr=False,compare=False)
