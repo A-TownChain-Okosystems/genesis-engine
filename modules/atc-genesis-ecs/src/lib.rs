@@ -879,16 +879,9 @@ impl<R: Renderer> TransformRenderPipeline<R> {
     }
 }
 
+#[derive(Default)]
 pub struct WorldEcsBridge {
     chunk_entities: HashMap<WorldChunkId, EntityId>,
-}
-
-impl Default for WorldEcsBridge {
-    fn default() -> Self {
-        Self {
-            chunk_entities: HashMap::new(),
-        }
-    }
 }
 
 impl WorldEcsBridge {
