@@ -176,8 +176,8 @@ fn unescape(s: &str) -> String {
     // BUGFIX: Das fruehere erste replace hatte durch Backslash-Zeilenfortsetzung ein
     // LEERES Suchmuster und fuegte "\n" zwischen jedes Zeichen ein; Roundtrip kaputt.
     s.replace("\\n", "\n")
-    .replace("\\p", "|")
-    .replace("\\\\", "\\")
+        .replace("\\p", "|")
+        .replace("\\\\", "\\")
 }
 #[cfg(test)]
 mod tests {
