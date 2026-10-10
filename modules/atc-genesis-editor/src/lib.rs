@@ -173,11 +173,9 @@ fn escape(s: &str) -> String {
         .replace('\n', "\\n")
 }
 fn unescape(s: &str) -> String {
-    s.replace(
-        "\
-", "
-",
-    )
+    // BUGFIX: Das fruehere erste replace hatte durch Backslash-Zeilenfortsetzung ein
+    // LEERES Suchmuster und fuegte "\n" zwischen jedes Zeichen ein; Roundtrip kaputt.
+    s.replace("\\n", "\n")
     .replace("\\p", "|")
     .replace("\\\\", "\\")
 }
