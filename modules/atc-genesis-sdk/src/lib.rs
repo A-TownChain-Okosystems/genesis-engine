@@ -47,17 +47,10 @@ impl GameContext {
         self.frame = self.frame.saturating_add(1)
     }
 }
+#[derive(Default)]
 pub struct PluginRuntime {
     plugins: Vec<Box<dyn GamePlugin>>,
     started: bool,
-}
-impl Default for PluginRuntime {
-    fn default() -> Self {
-        Self {
-            plugins: Vec::new(),
-            started: false,
-        }
-    }
 }
 impl PluginRuntime {
     pub fn add<P: GamePlugin + 'static>(&mut self, plugin: P) {
