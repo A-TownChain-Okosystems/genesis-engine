@@ -11,6 +11,7 @@ members = [
   "modules/atc-genesis-ui",
   "modules/atc-genesis-sdk",
   "modules/atc-genesis-ai",
+  "modules/atc-genesis-vehicle-ai",
   "modules/atc-genesis-network",
   "modules/atc-genesis-build",
   "modules/atc-genesis-tools",
