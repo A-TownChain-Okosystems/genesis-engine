@@ -31,7 +31,11 @@ impl SoftwareFramebuffer {
     pub const MAX_DIMENSION: u32 = 16_384;
 
     pub fn new(width: u32, height: u32, clear: [u8; 3]) -> Result<Self, String> {
-        if width == 0 || height == 0 || width > Self::MAX_DIMENSION || height > Self::MAX_DIMENSION {
+        if width == 0
+            || height == 0
+            || width > Self::MAX_DIMENSION
+            || height > Self::MAX_DIMENSION
+        {
             return Err("framebuffer dimensions are outside the supported range".into());
         }
         let pixel_count = (width as usize)
@@ -44,15 +48,30 @@ impl SoftwareFramebuffer {
         for pixel in pixels.chunks_exact_mut(3) {
             pixel.copy_from_slice(&clear);
         }
-        Ok(Self { width, height, pixels, depth: vec![f32::INFINITY; pixel_count] })
+        Ok(Self {
+            width,
+            height,
+            pixels,
+            depth: vec![f32::INFINITY; pixel_count],
+        })
     }
 
-    pub fn width(&self) -> u32 { self.width }
-    pub fn height(&self) -> u32 { self.height }
-    pub fn pixels(&self) -> &[u8] { &self.pixels }
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn pixels(&self) -> &[u8] {
+        &self.pixels
+    }
 
     pub fn pixel(&self, x: u32, y: u32) -> Option<[u8; 3]> {
-        if x >= self.width || y >= self.height { return None; }
+        if x >= self.width || y >= self.height {
+            return None;
+        }
         let i = ((y * self.width + x) * 3) as usize;
         Some([self.pixels[i], self.pixels[i + 1], self.pixels[i + 2]])
     }
@@ -87,7 +106,10 @@ impl SoftwareFramebuffer {
                 mesh.vertices[triangle[2] as usize],
             ];
             let depths = [-v[0][2], -v[1][2], -v[2][2]];
-            if depths.iter().any(|d| !d.is_finite() || *d < camera.near || *d > camera.far) {
+            if depths
+                .iter()
+                .any(|d| !d.is_finite() || *d < camera.near || *d > camera.far)
+            {
                 continue;
             }
             let mut screen = [[0.0f32; 2]; 3];
@@ -99,15 +121,41 @@ impl SoftwareFramebuffer {
                     (1.0 - ndc_y) * 0.5 * (self.height.saturating_sub(1) as f32),
                 ];
             }
-            if screen.iter().flatten().any(|p| !p.is_finite()) { continue; }
+            if screen.iter().flatten().any(|p| !p.is_finite()) {
+                continue;
+            }
             let area = edge(screen[0], screen[1], screen[2]);
-            if !area.is_finite() || area.abs() <= f32::EPSILON { continue; }
+            if !area.is_finite() || area.abs() <= f32::EPSILON {
+                continue;
+            }
 
-            let min_x = screen.iter().map(|p| p[0]).fold(f32::INFINITY, f32::min).floor().max(0.0) as u32;
-            let max_x = screen.iter().map(|p| p[0]).fold(f32::NEG_INFINITY, f32::max).ceil().min((self.width - 1) as f32) as u32;
-            let min_y = screen.iter().map(|p| p[1]).fold(f32::INFINITY, f32::min).floor().max(0.0) as u32;
-            let max_y = screen.iter().map(|p| p[1]).fold(f32::NEG_INFINITY, f32::max).ceil().min((self.height - 1) as f32) as u32;
-            if min_x > max_x || min_y > max_y { continue; }
+            let min_x = screen
+                .iter()
+                .map(|p| p[0])
+                .fold(f32::INFINITY, f32::min)
+                .floor()
+                .max(0.0) as u32;
+            let max_x = screen
+                .iter()
+                .map(|p| p[0])
+                .fold(f32::NEG_INFINITY, f32::max)
+                .ceil()
+                .min((self.width - 1) as f32) as u32;
+            let min_y = screen
+                .iter()
+                .map(|p| p[1])
+                .fold(f32::INFINITY, f32::min)
+                .floor()
+                .max(0.0) as u32;
+            let max_y = screen
+                .iter()
+                .map(|p| p[1])
+                .fold(f32::NEG_INFINITY, f32::max)
+                .ceil()
+                .min((self.height - 1) as f32) as u32;
+            if min_x > max_x || min_y > max_y {
+                continue;
+            }
 
             for y in min_y..=max_y {
                 for x in min_x..=max_x {
@@ -115,7 +163,9 @@ impl SoftwareFramebuffer {
                     let w0 = edge(screen[1], screen[2], point) / area;
                     let w1 = edge(screen[2], screen[0], point) / area;
                     let w2 = edge(screen[0], screen[1], point) / area;
-                    if w0 < 0.0 || w1 < 0.0 || w2 < 0.0 { continue; }
+                    if w0 < 0.0 || w1 < 0.0 || w2 < 0.0 {
+                        continue;
+                    }
                     let depth = w0 * depths[0] + w1 * depths[1] + w2 * depths[2];
                     let index = (y * self.width + x) as usize;
                     if depth < self.depth[index] {
@@ -158,12 +208,20 @@ mod tests {
     #[test]
     fn triangle_produces_pixels_and_ppm_artifact_bytes() {
         let mut frame = SoftwareFramebuffer::new(64, 64, [8, 12, 20]).unwrap();
-        assert_eq!(frame.render_mesh(&triangle(), RasterCamera::default(), [240, 80, 32]).unwrap(), 1);
+        assert_eq!(
+            frame
+                .render_mesh(&triangle(), RasterCamera::default(), [240, 80, 32])
+                .unwrap(),
+            1
+        );
         assert_eq!(frame.pixel(32, 32), Some([240, 80, 32]));
         assert!(frame.pixels().chunks_exact(3).any(|p| p == [240, 80, 32]));
         let image = frame.to_ppm();
         assert!(image.starts_with(b"P6\n64 64\n255\n"));
-        assert_eq!(image.len(), b"P6\n64 64\n255\n".len() + 64 * 64 * 3);
+        assert_eq!(
+            image.len(),
+            b"P6\n64 64\n255\n".len() + 64 * 64 * 3
+        );
         assert_eq!(image, frame.to_ppm());
     }
 
@@ -175,8 +233,12 @@ mod tests {
             vertices: vec![[-1.4, -1.2, -4.0], [1.4, -1.2, -4.0], [0.0, 1.4, -4.0]],
             ..triangle()
         };
-        frame.render_mesh(&far, RasterCamera::default(), [20, 40, 200]).unwrap();
-        frame.render_mesh(&near, RasterCamera::default(), [240, 80, 32]).unwrap();
+        frame
+            .render_mesh(&far, RasterCamera::default(), [20, 40, 200])
+            .unwrap();
+        frame
+            .render_mesh(&near, RasterCamera::default(), [240, 80, 32])
+            .unwrap();
         assert_eq!(frame.pixel(32, 32), Some([240, 80, 32]));
     }
 
@@ -185,13 +247,28 @@ mod tests {
         let mut frame = SoftwareFramebuffer::new(8, 8, [0, 0, 0]).unwrap();
         let mut bad = triangle();
         bad.indices = vec![0, 1, 99];
-        assert!(frame.render_mesh(&bad, RasterCamera::default(), [255, 0, 0]).is_err());
-        assert!(frame.render_mesh(&triangle(), RasterCamera { near: 5.0, far: 1.0, ..Default::default() }, [255, 0, 0]).is_err());
+        assert!(frame
+            .render_mesh(&bad, RasterCamera::default(), [255, 0, 0])
+            .is_err());
+        assert!(frame
+            .render_mesh(
+                &triangle(),
+                RasterCamera {
+                    near: 5.0,
+                    far: 1.0,
+                    ..Default::default()
+                },
+                [255, 0, 0]
+            )
+            .is_err());
     }
 
     #[test]
     fn framebuffer_rejects_unsafe_dimensions() {
         assert!(SoftwareFramebuffer::new(0, 10, [0, 0, 0]).is_err());
-        assert!(SoftwareFramebuffer::new(SoftwareFramebuffer::MAX_DIMENSION + 1, 1, [0, 0, 0]).is_err());
+        assert!(
+            SoftwareFramebuffer::new(SoftwareFramebuffer::MAX_DIMENSION + 1, 1, [0, 0, 0])
+                .is_err()
+        );
     }
 }
