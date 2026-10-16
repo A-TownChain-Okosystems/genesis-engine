@@ -1,0 +1,344 @@
+{
+  "schema_version": "1.0.0",
+  "document_id": "GENESIS-WORLD-DESIGN-CATALOG-001",
+  "status": "PARTIAL",
+  "complete": false,
+  "repository": "A-TownChain-Okosystems/genesis-engine",
+  "audit_base_commit": "8b7100e8a88f3c9bb6e24ddda31706902f125bb5",
+  "issue": "https://github.com/A-TownChain-Okosystems/genesis-engine/issues/37",
+  "policy": {
+    "standalone_first_ecosystem_second": true,
+    "external_engine_required": false,
+    "ssot_rule": "Reuse canonical Genesis modules for world, renderer, assets, physics, editor, runtime and build. Do not introduce parallel implementations.",
+    "evidence_rule": "Do not mark functionality VERIFIED without source-level mapping and reproducible tests or runtime evidence. CI green alone is insufficient."
+  },
+  "existing_evidence": [
+    {
+      "path": "modules/atc-genesis-world/src/lib.rs",
+      "blob_sha": "9f489088581dc8ea773200b9524475d26d7f7471",
+      "symbols": [
+        "WorldBounds",
+        "WorldChunkId",
+        "ChunkState",
+        "WorldChunk",
+        "ChunkTransition",
+        "WorldStreamer::add_chunk",
+        "WorldStreamer::update",
+        "WorldStreamer::plan_transitions",
+        "WorldStreamer::complete_load",
+        "WorldStreamer::cancel_load"
+      ],
+      "responsibility": "Bounds checks and distance calculations; chunk registry; deterministic nearest-first selection; asset-presence gate; chunk loading state transitions.",
+      "status": "IMPLEMENTED",
+      "evidence_limit": "Does not prove terrain generation, biome simulation, persistence, editor UI, collision integration, mesh generation or rendered pixels."
+    }
+  ],
+  "component_contracts": [
+    {
+      "id": "WORLD-001",
+      "component": "World coordinates and bounds",
+      "canonical_path": "modules/atc-genesis-world/src/lib.rs",
+      "responsibility": "Validated world/chunk coordinate model; stable IDs; finite numeric inputs; explicit coordinate units and origin policy.",
+      "dependencies": [
+        "atc-genesis-platform"
+      ],
+      "status": "PARTIAL",
+      "missing_evidence": [
+        "Reject NaN/infinity bounds and query positions",
+        "Document coordinate handedness, units and origin/rebase policy",
+        "Property tests for boundaries and distance calculations"
+      ]
+    },
+    {
+      "id": "WORLD-002",
+      "component": "Chunk lifecycle and streaming",
+      "canonical_path": "modules/atc-genesis-world/src/lib.rs",
+      "responsibility": "Deterministic chunk selection, budgeted load/unload, cancellation, stale completion handling and asset availability.",
+      "dependencies": [
+        "WORLD-001",
+        "atc-genesis-platform::WorldAssetResolver",
+        "atc-genesis-assets",
+        "atc-genesis-runtime"
+      ],
+      "status": "PARTIAL",
+      "missing_evidence": [
+        "Audit transition invariants and race/stale completion behavior",
+        "Clarify update vs plan_transitions semantics",
+        "Stress tests for large worlds and bounded work",
+        "Persistence and failure/retry policy"
+      ]
+    },
+    {
+      "id": "WORLD-003",
+      "component": "Terrain data and procedural generation",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Versioned terrain representation; seeded heightfields; deterministic noise composition; erosion as an optional explicit pass.",
+      "dependencies": [
+        "WORLD-001",
+        "atc-genesis-assets",
+        "atc-genesis-build"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Canonical symbols and file ownership not yet inventoried",
+        "Seed/algorithm/version contract",
+        "Numerical bounds and deterministic cross-platform tests",
+        "Memory and generation-time budgets"
+      ]
+    },
+    {
+      "id": "WORLD-004",
+      "component": "Terrain mesh and LOD",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Convert terrain data into renderer-ready mesh assets; LOD selection, stitching and seam prevention.",
+      "dependencies": [
+        "WORLD-003",
+        "atc-genesis-renderer",
+        "atc-genesis-assets"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Mesh schema and winding/normals contract",
+        "LOD selection and crack-free transitions",
+        "End-to-end mesh-to-render evidence",
+        "Regression scenes and performance measurements"
+      ]
+    },
+    {
+      "id": "WORLD-005",
+      "component": "Biome and climate model",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Deterministic biome classification from configured climate/elevation/moisture fields; versioned rules and material mapping.",
+      "dependencies": [
+        "WORLD-003",
+        "atc-genesis-assets"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Data model and rules schema",
+        "Seeded reproducibility tests",
+        "Biome boundary and blending policy",
+        "No dependency on remote generation services"
+      ]
+    },
+    {
+      "id": "WORLD-006",
+      "component": "Vegetation and object distribution",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Seeded placement, density masks, slope/elevation constraints, stable IDs and chunk-boundary consistency.",
+      "dependencies": [
+        "WORLD-003",
+        "WORLD-005",
+        "atc-genesis-assets",
+        "atc-genesis-renderer",
+        "atc-genesis-physics"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Placement algorithm and stable seed derivation",
+        "Cross-chunk duplicate/omission tests",
+        "Collision and render instance integration",
+        "Deterministic density and budget limits"
+      ]
+    },
+    {
+      "id": "WORLD-007",
+      "component": "World editor tools",
+      "canonical_path": "modules/atc-genesis-editor/src/lib.rs",
+      "responsibility": "Terrain sculpt/flatten/smooth, paint, place/delete, grid/free placement, selection and undo/redo through canonical editor document.",
+      "dependencies": [
+        "atc-genesis-editor",
+        "atc-genesis-world",
+        "atc-genesis-assets"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Inspect full editor module and UI wiring",
+        "Transactional edit model and undo/redo for terrain data",
+        "Save/load compatibility and migration tests",
+        "Evidence of interactive editor UI"
+      ]
+    },
+    {
+      "id": "WORLD-008",
+      "component": "Buildings, roads and authored levels",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Composable world objects, placement constraints, roads/path splines, building modules and region/streaming ownership.",
+      "dependencies": [
+        "WORLD-001",
+        "atc-genesis-assets",
+        "atc-genesis-editor",
+        "atc-genesis-physics"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Determine existing prefab/scene contracts before adding types",
+        "Road geometry and junction validation",
+        "Placement/collision rules",
+        "World serialization and migration"
+      ]
+    },
+    {
+      "id": "WORLD-009",
+      "component": "Water and environmental surfaces",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Water bodies, terrain intersection policy, shoreline metadata and renderer-independent water data.",
+      "dependencies": [
+        "WORLD-003",
+        "atc-genesis-renderer",
+        "atc-genesis-physics"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Data and simulation scope",
+        "Terrain/water boundary policy",
+        "Rendering and collision tests",
+        "Performance budgets"
+      ]
+    },
+    {
+      "id": "WORLD-010",
+      "component": "Persistence and reproducible artifacts",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Versioned world manifests, deterministic regeneration metadata, asset references, integrity hashes and migration policy.",
+      "dependencies": [
+        "WORLD-001",
+        "atc-genesis-assets",
+        "atc-genesis-build"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "World serialization format and schema versioning",
+        "Cryptographic hash choice for integrity evidence",
+        "Round-trip and corruption tests",
+        "Reproducible artifact evidence"
+      ]
+    },
+    {
+      "id": "WORLD-011",
+      "component": "Runtime integration and budgets",
+      "canonical_path": "modules/atc-genesis-runtime/",
+      "responsibility": "Schedule generation and streaming within explicit CPU/memory budgets; avoid blocking frame-critical execution.",
+      "dependencies": [
+        "WORLD-002",
+        "WORLD-004",
+        "atc-genesis-runtime",
+        "atc-genesis-platform"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Inspect runtime scheduling and ownership",
+        "Cancellation/backpressure behavior",
+        "Frame-time and memory benchmarks",
+        "Failure propagation and observability"
+      ]
+    },
+    {
+      "id": "WORLD-012",
+      "component": "Physics and collision integration",
+      "canonical_path": "modules/atc-genesis-physics/",
+      "responsibility": "Terrain collision representation and lifecycle synchronization with world chunks and authored objects.",
+      "dependencies": [
+        "WORLD-002",
+        "WORLD-003",
+        "atc-genesis-physics"
+      ],
+      "status": "BLOCKED",
+      "missing_evidence": [
+        "Inspect canonical physics interfaces",
+        "Collision cooking/build contract",
+        "Load/unload synchronization tests",
+        "Correctness and performance benchmarks"
+      ]
+    },
+    {
+      "id": "WORLD-013",
+      "component": "Quality gates and evidence",
+      "canonical_path": "modules/atc-genesis-world/",
+      "responsibility": "Unit/property/regression tests; deterministic seed fixtures; performance budgets; exact build/test artifact evidence.",
+      "dependencies": [
+        "WORLD-001",
+        "WORLD-002",
+        "WORLD-003",
+        "WORLD-004",
+        "WORLD-005",
+        "WORLD-010"
+      ],
+      "status": "PARTIAL",
+      "missing_evidence": [
+        "Complete source-to-test map",
+        "Execute tests against exact candidate SHA",
+        "Record run/job/step/exit code and artifact digests",
+        "Rendered-output evidence for full integration"
+      ]
+    }
+  ],
+  "dependency_edges": [
+    [
+      "WORLD-001",
+      "WORLD-002"
+    ],
+    [
+      "WORLD-001",
+      "WORLD-003"
+    ],
+    [
+      "WORLD-003",
+      "WORLD-004"
+    ],
+    [
+      "WORLD-003",
+      "WORLD-005"
+    ],
+    [
+      "WORLD-005",
+      "WORLD-006"
+    ],
+    [
+      "WORLD-002",
+      "WORLD-011"
+    ],
+    [
+      "WORLD-002",
+      "WORLD-012"
+    ],
+    [
+      "WORLD-003",
+      "WORLD-010"
+    ],
+    [
+      "WORLD-004",
+      "WORLD-013"
+    ],
+    [
+      "WORLD-007",
+      "WORLD-008"
+    ]
+  ],
+  "workspace_scope": [
+    "modules/atc-genesis-world",
+    "modules/atc-genesis-renderer",
+    "modules/atc-genesis-assets",
+    "modules/atc-genesis-editor",
+    "modules/atc-genesis-physics",
+    "modules/atc-genesis-runtime",
+    "modules/atc-genesis-platform",
+    "modules/atc-genesis-build"
+  ],
+  "gate_status": {
+    "source_inventory": "PARTIAL",
+    "design_contracts": "DRAFT",
+    "implementation": "NOT_STARTED_BY_THIS_CHANGE",
+    "tests": "NOT_RUN",
+    "ci": "NOT_VERIFIED",
+    "end_to_end_world_render": "NOT_VERIFIED",
+    "complete": false
+  },
+  "next_actions": [
+    "Inspect all relevant source files, tests and call sites in the canonical world/editor/renderer/assets/physics/runtime modules.",
+    "Expand path-to-symbol-to-test mapping; classify every function as MAPPED, EXCLUDED or UNRESOLVED with rationale.",
+    "Resolve existing chunk transition semantics and validate finite bounds and positions before terrain work.",
+    "Implement in small PRs starting with world coordinate/data contracts and deterministic terrain generation.",
+    "Add deterministic tests before marking each feature VERIFIED; do not claim build or CI evidence until captured."
+  ]
+}
