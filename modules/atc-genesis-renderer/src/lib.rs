@@ -5,6 +5,8 @@ pub mod batching;
 pub mod ecs;
 pub mod render_item;
 pub mod resources;
+pub mod software;
+pub use software::{RasterCamera, SoftwareFramebuffer};
 pub use animation::SkinnedPose;
 pub use backend::{
     BackendRenderer, CommandBufferBackend, GraphicsBackend, NullBackend, RenderBackend,
