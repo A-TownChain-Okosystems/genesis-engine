@@ -177,11 +177,73 @@ impl SoftwareFramebuffer {
         Ok(triangles_drawn)
     }
 
+    /// Transforms a validated world-space mesh through the canonical renderer Camera,
+    /// then submits it to the same deterministic rasterization path.
+    pub fn render_world_mesh(
+        &mut self,
+        mesh: &MeshAsset,
+        camera: &crate::Camera,
+        color: [u8; 3],
+    ) -> Result<usize, String> {
+        mesh.validate()?;
+        let forward = normalize(camera.forward)
+            .ok_or_else(|| "camera forward vector must be finite and non-zero".to_string())?;
+        if !camera.position.iter().all(|v| v.is_finite()) {
+            return Err("camera position must be finite".into());
+        }
+        let world_up = [0.0, 1.0, 0.0];
+        let mut right = normalize(cross(forward, world_up));
+        if right.is_none() {
+            right = normalize(cross(forward, [0.0, 0.0, 1.0]));
+        }
+        let right = right.ok_or_else(|| "camera basis could not be constructed".to_string())?;
+        let up = cross(right, forward);
+        let mut camera_mesh = mesh.clone();
+        for vertex in &mut camera_mesh.vertices {
+            let relative = [
+                vertex[0] - camera.position[0],
+                vertex[1] - camera.position[1],
+                vertex[2] - camera.position[2],
+            ];
+            *vertex = [dot(relative, right), dot(relative, up), -dot(relative, forward)];
+        }
+        self.render_mesh(
+            &camera_mesh,
+            RasterCamera {
+                fov_y_radians: camera.fov_y_radians,
+                near: camera.near,
+                far: camera.far,
+            },
+            color,
+        )
+    }
+
     /// Encodes a binary PPM (P6) image, avoiding platform-dependent encoders.
     pub fn to_ppm(&self) -> Vec<u8> {
         let mut output = format!("P6\n{} {}\n255\n", self.width, self.height).into_bytes();
         output.extend_from_slice(&self.pixels);
         output
+    }
+}
+
+fn dot(a: [f32; 3], b: [f32; 3]) -> f32 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn cross(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
+}
+
+fn normalize(v: [f32; 3]) -> Option<[f32; 3]> {
+    let length = dot(v, v).sqrt();
+    if !length.is_finite() || length <= f32::EPSILON {
+        None
+    } else {
+        Some([v[0] / length, v[1] / length, v[2] / length])
     }
 }
 
@@ -207,7 +269,7 @@ mod tests {
         let mut frame = SoftwareFramebuffer::new(64, 64, [8, 12, 20]).unwrap();
         assert_eq!(
             frame
-                .render_mesh(&triangle(), RasterCamera::default(), [240, 80, 32])
+                .render_world_mesh(&triangle(), &crate::Camera::default(), [240, 80, 32])
                 .unwrap(),
             1
         );
