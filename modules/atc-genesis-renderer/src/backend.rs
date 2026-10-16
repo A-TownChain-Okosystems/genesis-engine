@@ -37,7 +37,7 @@ impl RenderBackend for NullBackend {
             backend: GraphicsBackend::Null,
             max_frames_in_flight: 2,
             compute: false,
-            instancing: true,
+            instancing: false,
         }
     }
     fn begin_frame(&mut self, frame: FrameId) {
@@ -67,9 +67,9 @@ impl RenderBackend for CommandBufferBackend {
     fn capabilities(&self) -> RenderCapabilities {
         RenderCapabilities {
             backend: GraphicsBackend::Null,
-            max_frames_in_flight: 3,
-            compute: true,
-            instancing: true,
+            max_frames_in_flight: 1,
+            compute: false,
+            instancing: false,
         }
     }
     fn begin_frame(&mut self, frame: FrameId) {
