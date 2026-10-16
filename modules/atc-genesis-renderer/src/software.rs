@@ -205,7 +205,11 @@ impl SoftwareFramebuffer {
                 vertex[1] - camera.position[1],
                 vertex[2] - camera.position[2],
             ];
-            *vertex = [dot(relative, right), dot(relative, up), -dot(relative, forward)];
+            *vertex = [
+                dot(relative, right),
+                dot(relative, up),
+                -dot(relative, forward),
+            ];
         }
         self.render_mesh(
             &camera_mesh,
