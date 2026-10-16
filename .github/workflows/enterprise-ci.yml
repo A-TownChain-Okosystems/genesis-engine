@@ -44,11 +44,15 @@ jobs:
 
       - name: Render deterministic image artifact
         env:
-          ATC_RENDER_ARTIFACT_PATH: target/render-artifacts/native-triangle.ppm
+          ATC_RENDER_ARTIFACT_PATH: ${{ github.workspace }}/target/render-artifacts/native-triangle.ppm
         run: cargo test -p atc-genesis-renderer triangle_produces_pixels_and_ppm_artifact_bytes
 
       - name: Hash image artifact
-        run: sha256sum target/render-artifacts/native-triangle.ppm | tee target/render-artifacts/native-triangle.ppm.sha256
+        env:
+          ATC_RENDER_ARTIFACT_PATH: ${{ github.workspace }}/target/render-artifacts/native-triangle.ppm
+        run: |
+          test -s "$ATC_RENDER_ARTIFACT_PATH"
+          sha256sum "$ATC_RENDER_ARTIFACT_PATH" | tee "$ATC_RENDER_ARTIFACT_PATH.sha256"
 
       - name: Upload rendered image and SHA-256 evidence
         uses: actions/upload-artifact@v4

@@ -42,7 +42,7 @@ impl SoftwareFramebuffer {
             .checked_mul(3)
             .ok_or_else(|| "framebuffer byte count overflow".to_string())?;
         let mut pixels = vec![0; byte_count];
-        for pixel in pixels.chunks_exact_mut(3) {
+        for pixel in pixels.as_chunks_mut::<3>().0 {
             pixel.copy_from_slice(&clear);
         }
         Ok(Self {
@@ -96,7 +96,7 @@ impl SoftwareFramebuffer {
         let tan_half_fov = (camera.fov_y_radians * 0.5).tan();
         let aspect = self.width as f32 / self.height as f32;
         let mut triangles_drawn = 0;
-        for triangle in mesh.indices.chunks_exact(3) {
+        for triangle in mesh.indices.as_chunks::<3>().0 {
             let v = [
                 mesh.vertices[triangle[0] as usize],
                 mesh.vertices[triangle[1] as usize],
@@ -205,7 +205,11 @@ impl SoftwareFramebuffer {
                 vertex[1] - camera.position[1],
                 vertex[2] - camera.position[2],
             ];
-            *vertex = [dot(relative, right), dot(relative, up), -dot(relative, forward)];
+            *vertex = [
+                dot(relative, right),
+                dot(relative, up),
+                -dot(relative, forward),
+            ];
         }
         self.render_mesh(
             &camera_mesh,
@@ -274,7 +278,12 @@ mod tests {
             1
         );
         assert_eq!(frame.pixel(32, 32), Some([240, 80, 32]));
-        assert!(frame.pixels().chunks_exact(3).any(|p| p == [240, 80, 32]));
+        assert!(frame
+            .pixels()
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .any(|p| *p == [240, 80, 32]));
         let image = frame.to_ppm();
         assert!(image.starts_with(b"P6\n64 64\n255\n"));
         assert_eq!(image.len(), b"P6\n64 64\n255\n".len() + 64 * 64 * 3);
