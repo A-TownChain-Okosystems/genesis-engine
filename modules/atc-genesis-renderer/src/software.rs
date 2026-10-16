@@ -1,7 +1,7 @@
 use atc_genesis_assets::MeshAsset;
 
 /// Deterministic CPU reference framebuffer. Pixels are stored as tightly packed RGB8.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SoftwareFramebuffer {
     width: u32,
     height: u32,
