@@ -31,7 +31,8 @@ impl SoftwareFramebuffer {
     pub const MAX_DIMENSION: u32 = 16_384;
 
     pub fn new(width: u32, height: u32, clear: [u8; 3]) -> Result<Self, String> {
-        if width == 0 || height == 0 || width > Self::MAX_DIMENSION || height > Self::MAX_DIMENSION {
+        if width == 0 || height == 0 || width > Self::MAX_DIMENSION || height > Self::MAX_DIMENSION
+        {
             return Err("framebuffer dimensions are outside the supported range".into());
         }
         let pixel_count = (width as usize)
@@ -216,6 +217,13 @@ mod tests {
         assert!(image.starts_with(b"P6\n64 64\n255\n"));
         assert_eq!(image.len(), b"P6\n64 64\n255\n".len() + 64 * 64 * 3);
         assert_eq!(image, frame.to_ppm());
+        if let Some(path) = std::env::var_os("ATC_RENDER_ARTIFACT_PATH") {
+            let path = std::path::PathBuf::from(path);
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent).unwrap();
+            }
+            std::fs::write(path, &image).unwrap();
+        }
     }
 
     #[test]
