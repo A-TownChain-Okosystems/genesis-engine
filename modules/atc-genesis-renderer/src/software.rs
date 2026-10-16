@@ -31,11 +31,7 @@ impl SoftwareFramebuffer {
     pub const MAX_DIMENSION: u32 = 16_384;
 
     pub fn new(width: u32, height: u32, clear: [u8; 3]) -> Result<Self, String> {
-        if width == 0
-            || height == 0
-            || width > Self::MAX_DIMENSION
-            || height > Self::MAX_DIMENSION
-        {
+        if width == 0 || height == 0 || width > Self::MAX_DIMENSION || height > Self::MAX_DIMENSION {
             return Err("framebuffer dimensions are outside the supported range".into());
         }
         let pixel_count = (width as usize)
@@ -218,10 +214,7 @@ mod tests {
         assert!(frame.pixels().chunks_exact(3).any(|p| p == [240, 80, 32]));
         let image = frame.to_ppm();
         assert!(image.starts_with(b"P6\n64 64\n255\n"));
-        assert_eq!(
-            image.len(),
-            b"P6\n64 64\n255\n".len() + 64 * 64 * 3
-        );
+        assert_eq!(image.len(), b"P6\n64 64\n255\n".len() + 64 * 64 * 3);
         assert_eq!(image, frame.to_ppm());
     }
 
@@ -267,8 +260,7 @@ mod tests {
     fn framebuffer_rejects_unsafe_dimensions() {
         assert!(SoftwareFramebuffer::new(0, 10, [0, 0, 0]).is_err());
         assert!(
-            SoftwareFramebuffer::new(SoftwareFramebuffer::MAX_DIMENSION + 1, 1, [0, 0, 0])
-                .is_err()
+            SoftwareFramebuffer::new(SoftwareFramebuffer::MAX_DIMENSION + 1, 1, [0, 0, 0]).is_err()
         );
     }
 }
