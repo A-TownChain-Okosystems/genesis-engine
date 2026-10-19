@@ -278,7 +278,12 @@ mod tests {
             1
         );
         assert_eq!(frame.pixel(32, 32), Some([240, 80, 32]));
-        assert!(frame.pixels().as_chunks::<3>().0.iter().any(|p| p == &[240, 80, 32]));
+        assert!(frame
+            .pixels()
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .any(|p| p == &[240, 80, 32]));
         let image = frame.to_ppm();
         assert!(image.starts_with(b"P6\n64 64\n255\n"));
         assert_eq!(image.len(), b"P6\n64 64\n255\n".len() + 64 * 64 * 3);
