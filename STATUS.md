@@ -4,12 +4,12 @@ title: Repository Status — genesis-engine
 version: 1.1.0
 status: active
 standard: ATC-STD-MD-001
-date: 2026-09-15
+date: 2026-10-09
 ---
 
 # Status — genesis-engine
 
-> **Status:** active (v1.1.0) — 2026-09-15
+> **Status:** active (v1.1.0) — snapshot reviewed 2026-10-09; the underlying status record dates from 2026-09-15
 
 ## Repository Status
 
@@ -27,6 +27,9 @@ date: 2026-09-15
 The repository now contains the monolithic foundations for platform contracts, renderer, physics, audio, animation, assets, UI, input, editor, SDK, gameplay AI, networking, build/package, developer tools and CLI. Existing ATC-based engine/ECS/world/creature modules remain part of the same repository.
 
 ## Verification
+
+> **Evidence freshness notice (2026-10-09):** the integration-surface inventory above is descriptive, not proof that each subsystem is complete. The latest-commit query in this refresh returned no PR-triggered workflow runs for the inspected SHA; this does not establish that no CI exists. The current revision must be checked in Actions before claiming CI verification.
+
 
 The canonical integration gate is:
 
