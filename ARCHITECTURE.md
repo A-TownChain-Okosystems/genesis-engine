@@ -29,6 +29,20 @@ modules/
 
 Quest AI ist eine übergreifende Gameplay-/AI-Funktion und nutzt diese Runtime-Domänen, ohne den deterministischen Engine-Kern zu umgehen.
 
+## Story AI
+
+The canonical narrative runtime is modules/atc-genesis-story-ai/. It owns story definitions, scenes, narrative graph transitions, characters, relationships, quests, dialogue, lore, memory, events, timeline, triggers, consequences, replay and validation.
+
+### AI Boundary
+
+AI providers are untrusted inputs and cannot directly mutate deterministic runtime state:
+
+AI Provider -> NarrativeProposal -> ProposalValidator -> Atomic Story Transaction -> WorldState -> Genesis Engine Runtime
+
+A proposal is validated against an isolated state copy before commit. Failed validation produces no state mutation.
+
+The state fingerprint is FNV-1a only as a non-cryptographic deterministic fingerprint; it is not a security or authenticity primitive.
+
 ## Quest AI
 
 Quest AI ist die kanonische Quest-Intelligence-Schicht der Genesis-Plattform. Sie wird durch die Master Architecture des `a-townchain-ecosystem` definiert und hier auf die Genesis-Engine-Runtime abgebildet.
