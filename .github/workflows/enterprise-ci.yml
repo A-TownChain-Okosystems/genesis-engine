@@ -42,6 +42,27 @@ jobs:
       - name: Test gate
         run: cargo test --workspace --all-targets
 
+      - name: Render deterministic image artifact
+        env:
+          ATC_RENDER_ARTIFACT_PATH: ${{ github.workspace }}/target/render-artifacts/native-triangle.ppm
+        run: cargo test -p atc-genesis-renderer triangle_produces_pixels_and_ppm_artifact_bytes
+
+      - name: Hash image artifact
+        env:
+          ATC_RENDER_ARTIFACT_PATH: ${{ github.workspace }}/target/render-artifacts/native-triangle.ppm
+        run: |
+          test -s "$ATC_RENDER_ARTIFACT_PATH"
+          sha256sum "$ATC_RENDER_ARTIFACT_PATH" | tee "$ATC_RENDER_ARTIFACT_PATH.sha256"
+
+      - name: Upload rendered image and SHA-256 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: deterministic-render-image
+          path: |
+            target/render-artifacts/native-triangle.ppm
+            target/render-artifacts/native-triangle.ppm.sha256
+          if-no-files-found: error
+
       - name: Clippy gate
         run: cargo clippy --workspace --all-targets -- -D warnings
 

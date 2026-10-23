@@ -8,3 +8,4 @@ license = "Apache-2.0"
 atc-genesis-platform = { path = "../atc-genesis-platform" }
 atc-genesis-ecs = { path = "../atc-genesis-ecs" }
 atc-genesis-animation = { path = "../atc-genesis-animation" }
+atc-genesis-assets = { path = "../atc-genesis-assets" }
