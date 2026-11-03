@@ -5,6 +5,7 @@ pub mod batching;
 pub mod ecs;
 pub mod render_item;
 pub mod resources;
+pub mod render_ai;
 pub use animation::SkinnedPose;
 pub use backend::{
     BackendRenderer, CommandBufferBackend, GraphicsBackend, NullBackend, RenderBackend,
@@ -14,6 +15,10 @@ pub use batching::{build_batches, RenderBatch, RenderItem};
 pub use render_item::{collect_entity, collect_render_items};
 pub use resources::{
     MaterialHandle, MeshHandle, MeshMaterialBinding, RenderResourceBindings, TextureHandle,
+};
+pub use render_ai::{
+    RenderBudget, RenderHardwareProfile, RenderPlan, RenderQuality, RenderSceneMetrics,
+    RenderingAi,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
