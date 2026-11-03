@@ -1,8 +1,10 @@
+mod deterministic;
 use atc_genesis_ecs::World;
 use atc_genesis_platform::{EntityId, PhysicsWorld};
 use atc_genesis_world::{ChunkState, WorldChunkId, WorldStreamer};
 mod collision;
 pub use collision::{Aabb, Collider, CollisionWorld};
+pub use deterministic::{DeterministicPhysics, Fixed, FixedAabb, FixedCollider, FixedPhysicsConfig, FixedRigidBody, FixedVec3, DEFAULT_FIXED_DT, FIXED_SCALE};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct RigidBody {
