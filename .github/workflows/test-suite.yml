@@ -107,7 +107,7 @@ jobs:
           text = re.sub(r"(?m)^bound_commit: [^\n]*", "bound_commit: " + sha, text)
           text = re.sub(r"(?m)^generated: [^\n]*", 'generated: "' + ts[:10] + '"', text)
           text = re.sub(r"(?m)^generated_by: [^\n]*", 'generated_by: "ATC Test Suite exact-commit evidence"', text)
-          text = re.sub(r"(?m)^(tests:\n  status:) [^\n]*", r"\\1 pass_with_evidence", text)
+          text = re.sub(r"(?m)^(tests:\n  status:) [^\n]*", lambda m: m.group(1) + " pass_with_evidence", text)
           text = re.sub(r"(?m)^  evidence: [^\n]*\n?", "", text)
           block = (
               "test_run:\n"
