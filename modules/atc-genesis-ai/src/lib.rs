@@ -209,3 +209,10 @@ mod tests {
         assert_eq!(n.shortest_path((0, 0), (2, 2)), None);
     }
 }
+
+
+pub mod details;
+pub use details::{
+    DetailContext, DetailDecision, DetailIssue, DetailLevel, DetailQualityReport, DetailScore,
+    DetailsAi,
+};
