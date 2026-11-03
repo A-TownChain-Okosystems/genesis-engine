@@ -4,12 +4,12 @@ title: Repository Status — genesis-engine
 version: 1.1.0
 status: active
 standard: ATC-STD-MD-001
-date: 2026-09-15
+date: 2026-11-03
 ---
 
 # Status — genesis-engine
 
-> **Status:** active (v1.1.0) — 2026-09-15
+> **Status:** active (v1.1.0) — snapshot reviewed 2026-11-03
 
 ## Repository Status
 
@@ -27,6 +27,8 @@ date: 2026-09-15
 The repository now contains the monolithic foundations for platform contracts, renderer, physics, audio, animation, assets, UI, input, editor, SDK, gameplay AI, networking, build/package, developer tools and CLI. Existing ATC-based engine/ECS/world/creature modules remain part of the same repository.
 
 ## Verification
+
+> **Evidence freshness notice (2026-11-03):** the last successful Test Suite run recorded in the evidence SSOT is `39981967116`, bound to `f95047d63c3ca7304b0e3a003998a15cc09f26ca`. Current main is `3c2be8c11c00bf5b6a1a4de87760004e9c5d35ef`; the historical run does not verify this revision. Current test status remains `not_run` until an exact-commit run and its immutable artifact are reconciled. This status page does not claim `CI_VERIFIED`, `AUDITED` or `PRODUCTION_READY`.
 
 The canonical integration gate is:
 
